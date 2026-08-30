@@ -1,0 +1,67 @@
+{
+  "name": "cosign",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "dev": "npm run build:ui && node scripts/wrangler.mjs dev --ip 127.0.0.1",
+    "dev:ui": "vite --host 127.0.0.1",
+    "build:ui": "vite build",
+    "build": "npm run typecheck && npm run build:ui && node scripts/wrangler.mjs deploy --dry-run --outdir dist/worker && npm run sourcemaps:worker",
+    "sourcemaps:worker": "node scripts/sentry-sourcemaps.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "tsx scripts/e2e.ts",
+    "demo": "tsx scripts/demo.ts",
+    "demo:bad": "tsx scripts/demo.ts --scenario fabricator",
+    "demo:naive": "tsx scripts/demo.ts --scenario fabricator --unprotected",
+    "demo:replay": "tsx scripts/replay.ts",
+    "seed": "tsx scripts/seed.ts",
+    "doctor": "tsx scripts/doctor.ts",
+    "evidence": "tsx scripts/evidence.ts",
+    "test:elasticsearch": "tsx scripts/elasticsearch-test.ts",
+    "test:devnet": "tsx scripts/devnet-test.ts",
+    "test:sentry": "tsx scripts/sentry-verify.ts",
+    "deploy:devnet": "tsx scripts/deploy-devnet.ts",
+    "tools:chain": "node scripts/install-chain.mjs",
+    "build:escrow": "node scripts/chain-build.mjs",
+    "verify:clean": "node scripts/clean-verify.mjs",
+    "test:live": "tsx scripts/live-smoke.ts"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "0.31.1",
+    "@sentry/cloudflare": "^10.0.0",
+    "@sentry/react": "^10.0.0",
+    "@solana/web3.js": "^1.98.4",
+    "bn.js": "^5.2.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "unpdf": "^1.8.1",
+    "zod": "^3.25.76",
+    "zod-to-json-schema": "^3.24.6"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260918.1",
+    "@sentry/cli": "^3.8.0",
+    "@sentry/vite-plugin": "^5.4.0",
+    "@types/bn.js": "^5.2.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "dotenv": "^17.2.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vite": "^7.1.0",
+    "vitest": "^4.1.11",
+    "wrangler": "^4.36.0"
+  },
+  "overrides": {
+    "toml": "^4.2.0"
+  }
+}
