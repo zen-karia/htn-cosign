@@ -87,7 +87,9 @@ const worker = {
         const origin = request.headers.get('origin');
         if (origin && origin !== url.origin) return json({ error: 'Cross-origin mutations rejected' }, 403);
         const local = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
-        if (!local && (!env.API_TOKEN || request.headers.get('authorization') !== `Bearer ${env.API_TOKEN}`)) return json({ error: 'Authorization required outside localhost' }, 401);
+        // Open public demo: mutations are unauthenticated unless API_TOKEN is set. Setting that
+        // secret re-locks the instance to callers holding the bearer token.
+        if (!local && env.API_TOKEN && request.headers.get('authorization') !== `Bearer ${env.API_TOKEN}`) return json({ error: 'Authorization required outside localhost' }, 401);
       }
       if (url.pathname === '/api/config') {
         const required: Record<string, string[]> = { openai: ['OPENAI_API_KEY'], elasticsearch: ['ELASTICSEARCH_URL'], gptzero: ['GPTZERO_API_KEY'], sentry: ['SENTRY_DSN'] };
