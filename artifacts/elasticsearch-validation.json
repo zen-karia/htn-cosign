@@ -1,0 +1,41 @@
+{
+  "at": "2026-09-19T22:10:51.886Z",
+  "elasticsearch_mocked": false,
+  "embedding_mocked": false,
+  "entailment_mocked": false,
+  "checks": [
+    {
+      "case": "reliable",
+      "unsupported_citations": 0,
+      "operations": [
+        "BM25",
+        "dense_vector knn",
+        "RRF",
+        "parameterized ES|QL citation retrieval",
+        "passage entailment"
+      ]
+    },
+    {
+      "case": "fabricator",
+      "unsupported_citations": 3,
+      "operations": [
+        "BM25",
+        "dense_vector knn",
+        "RRF",
+        "parameterized ES|QL citation retrieval",
+        "passage entailment"
+      ]
+    },
+    {
+      "case": "sloppy",
+      "unsupported_citations": 0,
+      "operations": [
+        "BM25",
+        "dense_vector knn",
+        "RRF",
+        "parameterized ES|QL citation retrieval",
+        "passage entailment"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "at": "2026-09-19T05:07:40.097Z",
+  "fresh_directory": ".verify/clean-1789794369013",
+  "no_dependencies_or_env_copied": true,
+  "commands": [
+    {
+      "command": "npm ci --cache .cache/npm",
+      "exit_code": 0
+    },
+    {
+      "command": "npm run setup",
+      "exit_code": 0
+    },
+    {
+      "command": "npm run seed",
+      "exit_code": 0
+    },
+    {
+      "command": "npm test",
+      "exit_code": 0
+    },
+    {
+      "command": "npm run build",
+      "exit_code": 0
+    },
+    {
+      "command": "npm run test:e2e",
+      "exit_code": 0
+    },
+    {
+      "command": "npm run demo -- --decompose",
+      "exit_code": 0
+    },
+    {
+      "command": "npm run demo:replay",
+      "exit_code": 0
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "at": "2026-09-19T05:10:38.755222+00:00",
+  "program_id": "Fd9qA4pYkS43ordqGUVyYnaFZqAgRL1qZwa6nCBhC7Xq",
+  "sbf_build_passed": true,
+  "sbf_bytes": 241656,
+  "sbf_sha256": "3b323e9a02795815cee99d6554e1c1f120fb66111e72012e22299cd750615922",
+  "compiler_generated_idl_sha256": "c46ab637703dd682bf21644fcdf6114d2d1948b34639be691dc3c10120d12ecd",
+  "native_tests_passed": 5,
+  "deployed_to_devnet": false,
+  "deployment_blocker": "Public devnet faucet HTTP 429; no funding or transaction receipts claimed"
+}

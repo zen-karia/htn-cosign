@@ -1,0 +1,402 @@
+{
+  "version": 1,
+  "cached_at": "2026-09-19T17:14:55.469Z",
+  "replay": true,
+  "task": {
+    "task_id": "bfe66e97-cf6a-467a-851a-79b2460ab6b4",
+    "task_type": "claim_verification",
+    "buyer_agent_id": "buyer-agent",
+    "seller_agent_id": "agent-cedar",
+    "claim": "Meridian electric ferries reduced annual operating emissions by 80 percent.",
+    "payment_amount_sol": 0.05,
+    "acceptance_criteria": {
+      "required_fields": [
+        "verdict",
+        "reasoning",
+        "sources"
+      ],
+      "min_citations": 3,
+      "citations_must_be_grounded": true,
+      "must_pass_hallucination_check": true,
+      "verdict_enum": [
+        "supported",
+        "refuted",
+        "insufficient_evidence"
+      ]
+    },
+    "status": "paid",
+    "created_at": "2026-09-19T17:14:48.492Z",
+    "request": {
+      "claim": "Meridian electric ferries reduced annual operating emissions by 80 percent.",
+      "task_type": "claim_verification",
+      "payment_amount_sol": 0.05,
+      "acceptance_criteria": {
+        "required_fields": [
+          "verdict",
+          "reasoning",
+          "sources"
+        ],
+        "min_citations": 3,
+        "citations_must_be_grounded": true,
+        "must_pass_hallucination_check": true,
+        "verdict_enum": [
+          "supported",
+          "refuted",
+          "insufficient_evidence"
+        ]
+      },
+      "scenario": "reliable",
+      "decompose": false,
+      "protected": true
+    },
+    "slots": [
+      {
+        "seller_id": "agent-cedar",
+        "address": "MOCK-agent-cedar",
+        "state": "paid",
+        "receipt": {
+          "operation": "release",
+          "mocked": true,
+          "signature": "MOCK-bfe66e97-cf6a-467a-851a-79b2460ab6b4-release-0",
+          "explorer_url": null,
+          "amount_sol": 0.05,
+          "evidence_hash": "7ddf58fe836a93357f770006d9724263f0b9d1e03e9b438878cf2a8bb183d83b"
+        }
+      }
+    ],
+    "sub_claims": [
+      {
+        "sub_claim_id": "2c642453-5795-4a4a-8f4a-15cd82837214",
+        "parent_task_id": "bfe66e97-cf6a-467a-851a-79b2460ab6b4",
+        "text": "Meridian electric ferries reduced annual operating emissions by 80 percent.",
+        "assigned_seller_ids": [
+          "agent-cedar"
+        ],
+        "verdicts": [
+          {
+            "submission_id": "96c5c73f-c0bb-4293-8459-e696c1ba8155",
+            "verdict": "refuted",
+            "accepted": true
+          }
+        ],
+        "reconciled_verdict": "refuted"
+      }
+    ],
+    "deliveries": [
+      {
+        "submission_id": "96c5c73f-c0bb-4293-8459-e696c1ba8155",
+        "seller_id": "agent-cedar",
+        "sub_claim_id": "2c642453-5795-4a4a-8f4a-15cd82837214",
+        "content": {
+          "verdict": "refuted",
+          "reasoning": "Multiple independent sources consistently report that Meridian electric ferries reduced annual operating emissions by only 18 percent, not 80 percent. The Independent emissions audit states an 18 percent reduction and explicitly mentions that an 80 percent reduction is not supported. The Energy accounting ledger and Public review panel findings also confirm the 18 percent figure and reject the 80 percent claim due to exclusion of grid emissions. Therefore, the claim of an 80 percent reduction is refuted by these consistent, grounded sources.",
+          "sources": [
+            {
+              "url": "https://reference.cosign.example/emissions-audit",
+              "quote": "Meridian electric ferries reduced annual operating emissions by 18 percent. The comparison includes grid electricity and backup generation. An 80 percent reduction is not supported by the audit."
+            },
+            {
+              "url": "https://reference.cosign.example/energy-ledger",
+              "quote": "Meridian electric ferries reduced annual operating emissions by 18 percent. Recorded emissions were 820 tonnes compared with a 1000 tonne baseline. The reported reduction is not 80 percent."
+            },
+            {
+              "url": "https://reference.cosign.example/review-panel",
+              "quote": "Meridian electric ferries reduced annual operating emissions by 18 percent. The panel rejected the promotional 80 percent figure because it excluded grid emissions."
+            }
+          ]
+        },
+        "verification": {
+          "submission_id": "96c5c73f-c0bb-4293-8459-e696c1ba8155",
+          "judge_a": {
+            "score": 1,
+            "pass": true,
+            "reasoning": "The submission correctly identifies that the claim that Meridian electric ferries reduced annual operating emissions by 80 percent is refuted. The three provided references, which are fully grounded in the supplied documents, consistently state an 18 percent reduction in emissions, explicitly rejecting the 80 percent figure. The Independent emissions audit notes an 18 percent reduction including grid electricity and backup generation and states that an 80 percent reduction is not supported. The Energy accounting ledger and the Public review panel findings both confirm the 18 percent reduction and reject the 80 percent claim due to exclusions of grid emissions. Therefore, the verdict of refuted is accurate, and reasoning is sufficiently supported by three distinct, relevant, and grounded citations as required by the acceptance criteria."
+          },
+          "judge_b": {
+            "score": 1,
+            "pass": true,
+            "reasoning": "The submission meets all acceptance criteria. It provides three distinct, directly relevant sources which all state that the reduction was 18 percent, not 80 percent. The reasoning in the submission accurately and specifically cites these sources. The text of all quoted material is present in the corresponding 'reference_documents', showing proper source grounding. There is no evidence of hallucination: all facts and statistics are directly traceable. The verdict is supported, the source count is sufficient, and all requirements (verdict, reasoning, sources) are satisfied. There is no citation laundering or unsupported inference. Therefore, the submission earns a perfect score."
+          },
+          "agreement": true,
+          "grounding_check": {
+            "unsupported_claims": [],
+            "source": "elasticsearch",
+            "mocked": true,
+            "citations": [
+              {
+                "url": "https://reference.cosign.example/emissions-audit",
+                "exists": true,
+                "quote_matches": true,
+                "supports_verdict": true,
+                "document_id": "emissions-audit",
+                "entailment_reasoning": "The passage explicitly states that Meridian electric ferries reduced annual operating emissions by 18 percent, and further clarifies that an 80 percent reduction is not supported by the audit. This directly contradicts the claim and clearly refutes it.",
+                "entailment_mocked": false
+              },
+              {
+                "url": "https://reference.cosign.example/energy-ledger",
+                "exists": true,
+                "quote_matches": true,
+                "supports_verdict": true,
+                "document_id": "energy-ledger",
+                "entailment_reasoning": "The passage states the reduction was 18 percent, with figures given, and clearly says the reported reduction is not 80 percent. This directly contradicts the claim and thus refutes it.",
+                "entailment_mocked": false
+              },
+              {
+                "url": "https://reference.cosign.example/review-panel",
+                "exists": true,
+                "quote_matches": true,
+                "supports_verdict": true,
+                "document_id": "review-panel",
+                "entailment_reasoning": "The passage reports a reduction of 18 percent, directly contradicting the claim of 80 percent. It also mentions that the panel rejected the 80 percent figure, providing additional evidence against the claim. This supports the submitted refuted verdict.",
+                "entailment_mocked": false
+              }
+            ],
+            "references": [
+              {
+                "id": "emissions-audit",
+                "url": "https://reference.cosign.example/emissions-audit",
+                "title": "Independent emissions audit",
+                "text": "Meridian electric ferries reduced annual operating emissions by 18 percent. The comparison includes grid electricity and backup generation. An 80 percent reduction is not supported by the audit."
+              },
+              {
+                "id": "energy-ledger",
+                "url": "https://reference.cosign.example/energy-ledger",
+                "title": "Energy accounting ledger",
+                "text": "Meridian electric ferries reduced annual operating emissions by 18 percent. Recorded emissions were 820 tonnes compared with a 1000 tonne baseline. The reported reduction is not 80 percent."
+              },
+              {
+                "id": "review-panel",
+                "url": "https://reference.cosign.example/review-panel",
+                "title": "Public review panel findings",
+                "text": "Meridian electric ferries reduced annual operating emissions by 18 percent. The panel rejected the promotional 80 percent figure because it excluded grid emissions."
+              },
+              {
+                "id": "maintenance-ledger",
+                "url": "https://reference.cosign.example/maintenance-ledger",
+                "title": "Maintenance ledger",
+                "text": "Meridian operates 12 electric ferries. All twelve vessels completed the annual electrical safety inspection."
+              },
+              {
+                "id": "fleet-register",
+                "url": "https://reference.cosign.example/fleet-register",
+                "title": "Vessel register",
+                "text": "Meridian operates 12 electric ferries. Each vessel is registered for 120 passengers; no fleet expansion is recorded."
+              },
+              {
+                "id": "service-plan",
+                "url": "https://reference.cosign.example/service-plan",
+                "title": "Approved service plan",
+                "text": "Meridian operates 12 electric ferries. The fleet serves three routes under the approved service plan."
+              },
+              {
+                "id": "launch-notice",
+                "url": "https://reference.cosign.example/launch-notice",
+                "title": "Port authority launch notice",
+                "text": "Meridian launched its electric ferry service on May 14, 2024. The first scheduled public sailing departed at 07:30."
+              },
+              {
+                "id": "operations-report",
+                "url": "https://reference.cosign.example/operations-report",
+                "title": "Annual operations report",
+                "text": "Meridian launched its electric ferry service on May 14, 2024. Passenger operations have continued since that date."
+              },
+              {
+                "id": "council-minutes",
+                "url": "https://reference.cosign.example/council-minutes",
+                "title": "Transport committee minutes",
+                "text": "Meridian launched its electric ferry service on May 14, 2024. The committee confirmed the completed launch at its June meeting."
+              }
+            ]
+          },
+          "hallucination_check": {
+            "flagged": false,
+            "source": "gptzero",
+            "mocked": true,
+            "reasoning": "[MOCKED] Hallucination fixture; source integrity is independently enforced by grounding."
+          },
+          "resolver_verdict": {
+            "final_pass": true,
+            "confidence": 1,
+            "reasoning": "Independent judges agree.",
+            "method": "consensus"
+          },
+          "failed_criteria": [],
+          "mocked": true
+        }
+      }
+    ],
+    "receipts": [
+      {
+        "operation": "initialize",
+        "mocked": true,
+        "signature": "MOCK-bfe66e97-cf6a-467a-851a-79b2460ab6b4-initialize",
+        "explorer_url": null,
+        "amount_sol": 0.05
+      },
+      {
+        "operation": "release",
+        "mocked": true,
+        "signature": "MOCK-bfe66e97-cf6a-467a-851a-79b2460ab6b4-release-0",
+        "explorer_url": null,
+        "amount_sol": 0.05,
+        "evidence_hash": "7ddf58fe836a93357f770006d9724263f0b9d1e03e9b438878cf2a8bb183d83b"
+      }
+    ],
+    "activity": [
+      {
+        "id": 1,
+        "at": "2026-09-19T17:14:48.601Z",
+        "stage": "escrow",
+        "message": "[MOCKED] 0.050 SOL reserved across 1 allocation(s).",
+        "mocked": true
+      },
+      {
+        "id": 2,
+        "at": "2026-09-19T17:14:48.757Z",
+        "stage": "buyer",
+        "message": "1 atomic claim(s) assigned to 1 concurrent seller(s).",
+        "mocked": false
+      },
+      {
+        "id": 3,
+        "at": "2026-09-19T17:14:51.424Z",
+        "stage": "submission",
+        "message": "[MOCKED] A submission arrived for atomic claim 1; identity removed before verification.",
+        "mocked": true
+      },
+      {
+        "id": 4,
+        "at": "2026-09-19T17:14:51.426Z",
+        "stage": "submitted",
+        "message": "1 submissions received.",
+        "mocked": false
+      },
+      {
+        "id": 5,
+        "at": "2026-09-19T17:14:51.583Z",
+        "stage": "verification",
+        "message": "Blind reviews started. Grounding and hallucination are mandatory payment gates.",
+        "mocked": false
+      },
+      {
+        "id": 6,
+        "at": "2026-09-19T17:14:54.824Z",
+        "stage": "approved",
+        "message": "[MOCKED] Both reviews and hard gates resolved to approval.",
+        "mocked": true
+      },
+      {
+        "id": 7,
+        "at": "2026-09-19T17:14:55.147Z",
+        "stage": "paid",
+        "message": "[MOCKED] RELEASED 0.050 SOL to agent-cedar.",
+        "mocked": true
+      },
+      {
+        "id": 8,
+        "at": "2026-09-19T17:14:55.149Z",
+        "stage": "complete",
+        "message": "Settled: 0.050 SOL released, 0.000 SOL protected and returned.",
+        "mocked": false
+      }
+    ],
+    "evidence": [
+      {
+        "service": "solana",
+        "operation": "initialize",
+        "mocked": true,
+        "ok": true,
+        "at": "2026-09-19T17:14:48.600Z",
+        "duration_ms": 0
+      },
+      {
+        "service": "elasticsearch",
+        "operation": "hybrid_search",
+        "mocked": true,
+        "ok": true,
+        "at": "2026-09-19T17:14:48.913Z",
+        "duration_ms": 0
+      },
+      {
+        "service": "openai",
+        "operation": "seller_fact_check",
+        "mocked": false,
+        "ok": true,
+        "at": "2026-09-19T17:14:51.423Z",
+        "duration_ms": 2510
+      },
+      {
+        "service": "elasticsearch",
+        "operation": "hybrid_search",
+        "mocked": true,
+        "ok": true,
+        "at": "2026-09-19T17:14:51.603Z",
+        "duration_ms": 0
+      },
+      {
+        "service": "gptzero",
+        "operation": "hallucination_check",
+        "mocked": true,
+        "ok": true,
+        "at": "2026-09-19T17:14:51.603Z",
+        "duration_ms": 0
+      },
+      {
+        "service": "elasticsearch",
+        "operation": "citation_esql",
+        "mocked": true,
+        "ok": true,
+        "at": "2026-09-19T17:14:51.603Z",
+        "duration_ms": 0
+      },
+      {
+        "service": "openai",
+        "operation": "passage_entailment",
+        "mocked": false,
+        "ok": true,
+        "at": "2026-09-19T17:14:52.841Z",
+        "duration_ms": 1238
+      },
+      {
+        "service": "openai",
+        "operation": "judge_b",
+        "mocked": false,
+        "ok": true,
+        "at": "2026-09-19T17:14:54.280Z",
+        "duration_ms": 1438
+      },
+      {
+        "service": "openai",
+        "operation": "judge_a",
+        "mocked": false,
+        "ok": true,
+        "at": "2026-09-19T17:14:54.823Z",
+        "duration_ms": 1981
+      },
+      {
+        "service": "solana",
+        "operation": "release",
+        "mocked": true,
+        "ok": true,
+        "at": "2026-09-19T17:14:55.147Z",
+        "duration_ms": 0
+      }
+    ],
+    "phase": "complete",
+    "trace_id": "99142429702a45eb837110c43a096207",
+    "attempts": 0,
+    "running": false,
+    "refunded_sol": 0,
+    "paid_sol": 0.05,
+    "locked_sol": 0,
+    "service_modes": {
+      "openai": false,
+      "gptzero": true,
+      "elasticsearch": true,
+      "solana": true,
+      "sentry": true
+    },
+    "parent_verdict": "refuted",
+    "completed_at": "2026-09-19T17:14:55.149Z"
+  }
+}

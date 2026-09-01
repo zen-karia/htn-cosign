@@ -1,0 +1,122 @@
+[
+  {
+    "id": "launch-notice",
+    "url": "https://reference.cosign.example/launch-notice",
+    "title": "Port authority launch notice",
+    "text": "Meridian launched its electric ferry service on May 14, 2024. The first scheduled public sailing departed at 07:30.",
+    "assertions": [
+      {
+        "claim": "Meridian launched its electric ferry service on May 14, 2024.",
+        "verdict": "supported"
+      }
+    ]
+  },
+  {
+    "id": "operations-report",
+    "url": "https://reference.cosign.example/operations-report",
+    "title": "Annual operations report",
+    "text": "Meridian launched its electric ferry service on May 14, 2024. Passenger operations have continued since that date.",
+    "assertions": [
+      {
+        "claim": "Meridian launched its electric ferry service on May 14, 2024.",
+        "verdict": "supported"
+      }
+    ]
+  },
+  {
+    "id": "council-minutes",
+    "url": "https://reference.cosign.example/council-minutes",
+    "title": "Transport committee minutes",
+    "text": "Meridian launched its electric ferry service on May 14, 2024. The committee confirmed the completed launch at its June meeting.",
+    "assertions": [
+      {
+        "claim": "Meridian launched its electric ferry service on May 14, 2024.",
+        "verdict": "supported"
+      }
+    ]
+  },
+  {
+    "id": "fleet-register",
+    "url": "https://reference.cosign.example/fleet-register",
+    "title": "Vessel register",
+    "text": "Meridian operates 12 electric ferries. Each vessel is registered for 120 passengers; no fleet expansion is recorded.",
+    "assertions": [
+      {
+        "claim": "Meridian operates 12 electric ferries.",
+        "verdict": "supported"
+      }
+    ]
+  },
+  {
+    "id": "maintenance-ledger",
+    "url": "https://reference.cosign.example/maintenance-ledger",
+    "title": "Maintenance ledger",
+    "text": "Meridian operates 12 electric ferries. All twelve vessels completed the annual electrical safety inspection.",
+    "assertions": [
+      {
+        "claim": "Meridian operates 12 electric ferries.",
+        "verdict": "supported"
+      }
+    ]
+  },
+  {
+    "id": "service-plan",
+    "url": "https://reference.cosign.example/service-plan",
+    "title": "Approved service plan",
+    "text": "Meridian operates 12 electric ferries. The fleet serves three routes under the approved service plan.",
+    "assertions": [
+      {
+        "claim": "Meridian operates 12 electric ferries.",
+        "verdict": "supported"
+      }
+    ]
+  },
+  {
+    "id": "emissions-audit",
+    "url": "https://reference.cosign.example/emissions-audit",
+    "title": "Independent emissions audit",
+    "text": "Meridian electric ferries reduced annual operating emissions by 18 percent. The comparison includes grid electricity and backup generation. An 80 percent reduction is not supported by the audit.",
+    "assertions": [
+      {
+        "claim": "Meridian electric ferries reduced annual operating emissions by 80 percent.",
+        "verdict": "refuted"
+      },
+      {
+        "claim": "Meridian electric ferries reduced annual operating emissions by 18 percent.",
+        "verdict": "supported"
+      }
+    ]
+  },
+  {
+    "id": "energy-ledger",
+    "url": "https://reference.cosign.example/energy-ledger",
+    "title": "Energy accounting ledger",
+    "text": "Meridian electric ferries reduced annual operating emissions by 18 percent. Recorded emissions were 820 tonnes compared with a 1000 tonne baseline. The reported reduction is not 80 percent.",
+    "assertions": [
+      {
+        "claim": "Meridian electric ferries reduced annual operating emissions by 80 percent.",
+        "verdict": "refuted"
+      },
+      {
+        "claim": "Meridian electric ferries reduced annual operating emissions by 18 percent.",
+        "verdict": "supported"
+      }
+    ]
+  },
+  {
+    "id": "review-panel",
+    "url": "https://reference.cosign.example/review-panel",
+    "title": "Public review panel findings",
+    "text": "Meridian electric ferries reduced annual operating emissions by 18 percent. The panel rejected the promotional 80 percent figure because it excluded grid emissions.",
+    "assertions": [
+      {
+        "claim": "Meridian electric ferries reduced annual operating emissions by 80 percent.",
+        "verdict": "refuted"
+      },
+      {
+        "claim": "Meridian electric ferries reduced annual operating emissions by 18 percent.",
+        "verdict": "supported"
+      }
+    ]
+  }
+]

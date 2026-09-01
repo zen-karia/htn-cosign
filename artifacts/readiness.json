@@ -1,0 +1,14 @@
+{
+  "inspected_at": "2026-09-19T22:11:52.215Z",
+  "happy_devnet": false,
+  "dispute_devnet": false,
+  "real_judge_disagreement": false,
+  "real_uninstructed_failure": false,
+  "pool_settled": true,
+  "decomposition_contested": true,
+  "replay_cached": true,
+  "real_gptzero": false,
+  "real_elasticsearch_catch": true,
+  "real_openai": true,
+  "sentry_viewable_happy_and_dispute": false
+}
