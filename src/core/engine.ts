@@ -222,7 +222,11 @@ export class Engine {
           for (const delivery of deliveries) if (delivery.dispute) { delivery.dispute.resolution = 'auto_refund'; delivery.dispute.evidence_hash = hash; }
           const scope = units > 1 ? ` (${verified} of ${units} verifications)` : '';
           if (earned > 0) await this.event('payment.released', `SIMULATED RELEASE ${released_sol.toFixed(3)} SOL to ${slot.seller_id}${scope}.`, true);
-          if (earned < lamports) await this.event('payment.returned', `PAYMENT BLOCKED · SIMULATED RETURN ${returned_sol.toFixed(3)} SOL for ${slot.seller_id}${scope}.`, true);
+          // Only a seller that earned nothing was blocked; otherwise the buyer is simply keeping the
+          // part of the allocation that was never verified.
+          if (earned < lamports) await this.event('payment.returned', earned > 0
+            ? `SIMULATED RETURN ${returned_sol.toFixed(3)} SOL to the buyer; ${slot.seller_id} did not verify ${units - verified} of ${units} sub-claim(s).`
+            : `PAYMENT BLOCKED · SIMULATED RETURN ${returned_sol.toFixed(3)} SOL for ${slot.seller_id}${scope}.`, true);
         }
         task.status = task.paid_sol > 0 ? 'paid' : 'refunded'; task.phase = 'complete'; task.completed_at = new Date().toISOString(); delete task.error;
         await this.event('run.completed', `Simulated settlement: ${task.paid_sol.toFixed(3)} SOL releasable, ${task.refunded_sol.toFixed(3)} SOL protected and returnable.`, true); break;

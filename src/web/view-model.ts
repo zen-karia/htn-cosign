@@ -79,7 +79,9 @@ export function sellerViewModels(task?: Task): SellerViewModel[] {
     const verifications = deliveries.map(delivery => delivery.verification).filter(Boolean);
     const failed = deliveries.some(delivery => delivery.dispute || delivery.verification && !delivery.verification.resolver_verdict.final_pass);
     const pending = deliveries.length === 0 || verifications.length < deliveries.length;
-    const tone: SellerTone = slot.state === 'paid' ? 'success' : slot.state === 'refunded' || failed ? 'danger' : pending ? 'neutral' : 'warning';
+    // A seller paid for only some of its sub-claims is neither a clean pass nor a rejection.
+    const partial = slot.state === 'paid' && slot.total_units !== undefined && slot.verified_units !== undefined && slot.verified_units < slot.total_units;
+    const tone: SellerTone = partial ? 'warning' : slot.state === 'paid' ? 'success' : slot.state === 'refunded' || failed ? 'danger' : pending ? 'neutral' : 'warning';
     return {
       id: slot.seller_id,
       name: sellerName(slot.seller_id),
@@ -88,7 +90,7 @@ export function sellerViewModels(task?: Task): SellerViewModel[] {
       deliveries,
       submissionCount: deliveries.length,
       verdict: deliveries[0]?.content.verdict.replaceAll('_', ' ') ?? 'Awaiting submission',
-      paymentLabel: slot.state === 'paid' ? 'Paid' : slot.state === 'refunded' ? 'Refunded' : failed ? 'Blocked' : pending ? 'Pending' : 'In review',
+      paymentLabel: slot.state === 'paid' ? (partial ? `Paid ${slot.verified_units}/${slot.total_units}` : 'Paid') : slot.state === 'refunded' ? 'Refunded' : failed ? 'Blocked' : pending ? 'Pending' : 'In review',
       tone,
       groundingPassed: verifications.length ? verifications.every(result => result!.grounding_check.unsupported_claims.length === 0) : undefined,
       hallucinationPassed: verifications.length ? verifications.every(result => !result!.hallucination_check.flagged) : undefined,

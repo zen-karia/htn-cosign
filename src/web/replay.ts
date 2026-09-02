@@ -51,8 +51,12 @@ export function replayFrame(full: Task, count: number): Task {
     return slot;
   });
   frame.receipts = [...(funded ? full.receipts.filter(r => r.operation === 'initialize') : []), ...frame.slots.flatMap(s => s.receipt ? [s.receipt] : [])];
-  frame.paid_sol = frame.slots.filter(s => s.state === 'paid').length * frame.payment_amount_sol;
-  frame.refunded_sol = frame.slots.filter(s => s.state === 'refunded').length * frame.payment_amount_sol;
+  // Slots can settle partially, so totals come from the amounts recorded on each slot. Older
+  // recordings predate per-slot amounts and fall back to a whole-slot headcount.
+  const settled = (slot: Task['slots'][number], key: 'released_sol' | 'returned_sol') =>
+    slot[key] ?? (slot.state === (key === 'released_sol' ? 'paid' : 'refunded') ? frame.payment_amount_sol : 0);
+  frame.paid_sol = frame.slots.reduce((sum, slot) => sum + Math.round(settled(slot, 'released_sol') * 1e9), 0) / 1e9;
+  frame.refunded_sol = frame.slots.reduce((sum, slot) => sum + Math.round(settled(slot, 'returned_sol') * 1e9), 0) / 1e9;
   frame.locked_sol = funded ? frame.slots.filter(s => s.state === 'pending').length * frame.payment_amount_sol : 0;
   frame.sub_claims = has(STAGES.decomposed) ? frame.sub_claims.map(s => ({ ...s, verdicts: settling ? s.verdicts : [], reconciled_verdict: settling ? s.reconciled_verdict : 'insufficient_evidence', resolution: settling ? s.resolution : undefined })) : [];
   if (settling) frame.parent_verdict = full.parent_verdict;
