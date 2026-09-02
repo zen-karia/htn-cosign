@@ -1,5 +1,5 @@
 import { blindSubmission } from './blind';
-import { TaskRequest, Submission, mockEnabled, type Task, type Settings, type Delivery, type SubClaim } from './models';
+import { TaskRequest, Submission, mockEnabled, type Task, type Settings, type Delivery, type SubClaim, type Receipt } from './models';
 import { verify, type VerificationServices } from './verify';
 import { agentFor } from './agents';
 import { profiles, produce } from '../harness/sellers';
@@ -198,17 +198,31 @@ export class Engine {
         for (const [index, slot] of task.slots.entries()) {
           if (slot.state !== 'pending') continue;
           const deliveries = task.deliveries.filter(d => d.seller_id === slot.seller_id);
-          const pass = !task.request.protected || (deliveries.length === task.sub_claims.length && deliveries.every(d => d.verification?.resolver_verdict.final_pass));
-          const commitment = { task_id: task.task_id, slot: index, pass, submissions: deliveries.map(d => ({ submission_id: d.submission_id, content: d.content, verification: d.verification })) };
+          // A decomposed task commissions one verification per sub-claim. Paying only a seller that
+          // cleared every one of them makes the payout probability decay with claim complexity, so
+          // each sub-claim is settled on its own merits and the buyer keeps the unearned remainder.
+          const units = Math.max(1, task.sub_claims.length);
+          const verified = deliveries.filter(d => d.verification?.resolver_verdict.final_pass).length;
+          const lamports = Math.round(task.payment_amount_sol * 1e9);
+          const earned = task.request.protected ? Math.round(lamports * verified / units) : lamports;
+          const released_sol = earned / 1e9, returned_sol = (lamports - earned) / 1e9;
+          const pass = earned > 0;
+          const commitment = { task_id: task.task_id, slot: index, pass, verified, units, submissions: deliveries.map(d => ({ submission_id: d.submission_id, content: d.content, verification: d.verification })) };
           const hash = await digest(commitment);
-          const receipt = await this.span(pass ? 'escrow.release' : 'escrow.refund', () => this.escrow.settle(task, index, pass, hash));
-          slot.receipt = receipt; slot.state = pass ? 'paid' : 'refunded'; task.receipts.push(receipt);
+          const receipts: Receipt[] = [];
+          if (earned > 0) receipts.push(await this.span('escrow.release', () => this.escrow.settle(task, index, true, hash, earned / lamports)));
+          if (earned < lamports) receipts.push(await this.span('escrow.refund', () => this.escrow.settle(task, index, false, hash, (lamports - earned) / lamports)));
+          slot.receipts = receipts; slot.receipt = receipts[0]; slot.state = pass ? 'paid' : 'refunded';
+          slot.released_sol = released_sol; slot.returned_sol = returned_sol; slot.verified_units = verified; slot.total_units = units;
+          task.receipts.push(...receipts);
           // Derive totals from immutable completed slots, avoiding floating-point accumulation and retry drift.
-          task.paid_sol = task.slots.filter(s => s.state === 'paid').length * task.payment_amount_sol;
-          task.refunded_sol = task.slots.filter(s => s.state === 'refunded').length * task.payment_amount_sol;
+          task.paid_sol = task.slots.reduce((sum, s) => sum + Math.round((s.released_sol || 0) * 1e9), 0) / 1e9;
+          task.refunded_sol = task.slots.reduce((sum, s) => sum + Math.round((s.returned_sol || 0) * 1e9), 0) / 1e9;
           task.locked_sol = task.slots.filter(s => s.state === 'pending').length * task.payment_amount_sol;
           for (const delivery of deliveries) if (delivery.dispute) { delivery.dispute.resolution = 'auto_refund'; delivery.dispute.evidence_hash = hash; }
-          await this.event(pass ? 'payment.released' : 'payment.returned', `${pass ? 'SIMULATED RELEASE' : 'PAYMENT BLOCKED · SIMULATED RETURN'} ${task.payment_amount_sol.toFixed(3)} SOL ${pass ? 'to' : 'for'} ${slot.seller_id}.`, true);
+          const scope = units > 1 ? ` (${verified} of ${units} verifications)` : '';
+          if (earned > 0) await this.event('payment.released', `SIMULATED RELEASE ${released_sol.toFixed(3)} SOL to ${slot.seller_id}${scope}.`, true);
+          if (earned < lamports) await this.event('payment.returned', `PAYMENT BLOCKED · SIMULATED RETURN ${returned_sol.toFixed(3)} SOL for ${slot.seller_id}${scope}.`, true);
         }
         task.status = task.paid_sol > 0 ? 'paid' : 'refunded'; task.phase = 'complete'; task.completed_at = new Date().toISOString(); delete task.error;
         await this.event('run.completed', `Simulated settlement: ${task.paid_sol.toFixed(3)} SOL releasable, ${task.refunded_sol.toFixed(3)} SOL protected and returnable.`, true); break;

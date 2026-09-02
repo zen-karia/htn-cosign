@@ -36,7 +36,7 @@ export async function digest(value: unknown): Promise<string> {
   const bytes = new TextEncoder().encode(JSON.stringify(canonical(value)));
   return [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map(x => x.toString(16).padStart(2, '0')).join('');
 }
-export interface EscrowService { initialize(task: Task): Promise<Receipt>; settle(task: Task, slot: number, pass: boolean, hash: string): Promise<Receipt>; }
+export interface EscrowService { initialize(task: Task): Promise<Receipt>; settle(task: Task, slot: number, pass: boolean, hash: string, share?: number): Promise<Receipt>; }
 interface EscrowAccount { buyer: PublicKey; authority: PublicKey; taskHash: number[]; sellers: PublicKey[]; amountPerSeller: BN; states: number[]; evidenceHashes: number[][]; count: number; }
 
 export class Escrow implements EscrowService {
@@ -94,9 +94,14 @@ export class Escrow implements EscrowService {
       return this.receipt(connection, signature, 'initialize', task.payment_amount_sol * task.slots.length);
     });
   }
-  settle(task: Task, slot: number, pass: boolean, hash: string): Promise<Receipt> {
+  // `share` is the fraction of the slot allocation this settlement moves, so a seller that verified
+  // some of a decomposed task is paid for that part. The deployed program settles a slot whole, so a
+  // fractional share is only expressible in simulated settlement and is refused on chain.
+  settle(task: Task, slot: number, pass: boolean, hash: string, share = 1): Promise<Receipt> {
     const operation = pass ? 'release' : 'refund';
-    return this.runtime.call<Receipt>('solana', operation, () => ({ operation, mocked: true, signature: `MOCK-${task.task_id}-${operation}-${slot}`, explorer_url: null, amount_sol: task.payment_amount_sol, evidence_hash: hash }), async () => {
+    const amount_sol = Math.round(task.payment_amount_sol * share * 1e9) / 1e9;
+    return this.runtime.call<Receipt>('solana', operation, () => ({ operation, mocked: true, signature: `MOCK-${task.task_id}-${operation}-${slot}`, explorer_url: null, amount_sol, evidence_hash: hash }), async () => {
+      if (share !== 1) throw new ServiceUnavailable('solana', 'Partial settlement is not supported by the deployed escrow program');
       if (task.request.protected && pass && task.deliveries.filter(d => d.seller_id === task.slots[slot].seller_id).some(d => d.verification?.mocked)) throw new ServiceUnavailable('solana', 'Refusing live payout for mocked verification');
       const { connection, buyer, authority, program, pda, account } = await this.client(task);
       const existing = await account.fetchNullable(pda);

@@ -82,7 +82,7 @@ export interface Receipt { operation: 'initialize' | 'release' | 'refund'; mocke
 export interface Delivery { submission_id: string; seller_id: string; sub_claim_id: string; content: Submission; verification?: VerificationResult; dispute?: DisputeEvidence; error?: string; }
 export interface Activity { id: number; at: string; stage: string; message: string; mocked: boolean; }
 export interface ServiceEvidence { service: string; operation: string; mocked: boolean; ok: boolean; at: string; duration_ms: number; request_id?: string; error?: string; }
-export interface SellerSlot { seller_id: string; address: string; state: 'pending' | 'paid' | 'refunded'; receipt?: Receipt; error?: string; }
+export interface SellerSlot { seller_id: string; address: string; state: 'pending' | 'paid' | 'refunded'; receipt?: Receipt; receipts?: Receipt[]; released_sol?: number; returned_sol?: number; verified_units?: number; total_units?: number; error?: string; }
 export interface Task {
   task_id: string; task_type: TaskRequest['task_type']; buyer_agent_id: string; seller_agent_id: string;
   claim: string; payment_amount_sol: number; acceptance_criteria: Criteria;
