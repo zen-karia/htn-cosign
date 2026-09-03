@@ -246,9 +246,9 @@ th { color: var(--text-tertiary); font-size: 8px; text-transform: uppercase; }
 .claim-list>div>span { color: var(--primary); font: 10px "SFMono-Regular", Consolas, monospace; }
 .claim-list p { margin: 0; color: var(--text-secondary); font-size: 9.5px; line-height: 1.5; }
 .activity-feed { max-height: 275px; overflow: auto; }
-.activity-row { display: grid; grid-template-columns: 57px 70px 1fr; align-items: start; gap: 7px; padding: 7px 13px; border-bottom: 1px solid var(--border-subtle); animation: appear .18s ease; }
+.activity-row { display: grid; grid-template-columns: 57px minmax(70px, max-content) minmax(0, 1fr); align-items: start; gap: 7px; padding: 7px 13px; border-bottom: 1px solid var(--border-subtle); animation: appear .18s ease; }
 .activity-row time { color: var(--text-tertiary); font: 8px "SFMono-Regular", Consolas, monospace; }
-.activity-row p { margin: 1px 0 0; color: var(--text-secondary); font-size: 8.5px; line-height: 1.5; }
+.activity-row p { min-width: 0; margin: 1px 0 0; color: var(--text-secondary); font-size: 8.5px; line-height: 1.5; overflow-wrap: anywhere; }
 .empty-state { display: grid; place-items: center; min-height: 150px; padding: 20px; text-align: center; }
 .empty-state>span { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; color: var(--primary); background: var(--surface-blue); font-size: 19px; }
 .empty-state h3 { margin: 11px 0 4px; font-size: 12px; }
@@ -302,6 +302,7 @@ th { color: var(--text-tertiary); font-size: 8px; text-transform: uppercase; }
 .claim-verdict { padding: 11px; border-radius: 9px; background: var(--danger-bg); }
 .claim-verdict>small { display: block; margin-top: 7px; line-height: 1.4; }
 .evidence-layout { display: grid; grid-template-columns: minmax(230px, .78fr) minmax(340px, 1.2fr) minmax(250px, .9fr); gap: 12px; align-items: start; }
+.submission-panel>p { margin: 0 15px 13px; color: var(--text-secondary); font-size: 9.5px; line-height: 1.6; }
 .submission-panel blockquote { margin: 0 15px 13px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; color: #25325b; background: #fbfcff; font-size: 10px; line-height: 1.6; }
 .details-list, .receipt-fields { display: grid; grid-template-columns: auto 1fr; gap: 9px 12px; margin: 0 15px; padding: 13px 0; border-top: 1px solid var(--border-subtle); font-size: 9px; }
 .details-list dt, .receipt-fields dt { color: var(--text-tertiary); }

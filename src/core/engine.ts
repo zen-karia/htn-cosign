@@ -2,6 +2,7 @@ import { blindSubmission } from './blind';
 import { TaskRequest, Submission, mockEnabled, type Task, type Settings, type Delivery, type SubClaim, type Receipt } from './models';
 import { verify, type VerificationServices } from './verify';
 import { agentFor } from './agents';
+import { describeCriterion } from './criteria';
 import { profiles, produce } from '../harness/sellers';
 import { Runtime } from '../services/runtime';
 import { Models } from '../services/models';
@@ -174,7 +175,7 @@ export class Engine {
             };
             // One rejected submission costs a seller that sub-claim, not the whole allocation, so this
             // reports the verification outcome rather than announcing a payment decision.
-            await this.event('judge.completed', `${delivery.seller_id}: ${result.resolver_verdict.final_pass ? 'both reviews and hard gates resolved to approval.' : `NOT VERIFIED — ${result.failed_criteria.join('; ')}`}`, result.mocked);
+            await this.event('judge.completed', `${delivery.seller_id}: ${result.resolver_verdict.final_pass ? 'both reviews and hard gates resolved to approval.' : `NOT VERIFIED — ${result.failed_criteria.map(describeCriterion).join('; ')}`}`, result.mocked);
           } catch (err) { delivery.error = 'Verification service unavailable; payment remains locked.'; await this.save(task); throw err; }
         }));
         const failed = results.find(r => r.status === 'rejected'); if (failed?.status === 'rejected') throw failed.reason;
