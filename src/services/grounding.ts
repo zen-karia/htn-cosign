@@ -85,6 +85,7 @@ export class Grounding {
   }
   private async evaluate(input: BlindInput, references: ReferenceDocument[], docs: ReferenceDocument[]): Promise<GroundingResult> {
     const unsupported: string[] = [];
+    const notes: string[] = [];
     const passages: EntailmentPassage[] = [];
     const citations: GroundingResult['citations'] = input.submission.sources.map((source, citation_index) => {
       const sourceUrl = (() => { try { const u = new URL(source.url); u.hash = ''; return u.href.replace(/\/$/, ''); } catch { return source.url; } })();
@@ -97,8 +98,11 @@ export class Grounding {
       // A citation we could not retrieve is held apart from one we retrieved and disproved.
       const failure = this.retrievalFailures[sourceUrl] || this.retrievalFailures[source.url];
       const status: CitationStatus = doc ? (quoteMatches ? 'grounded' : 'contradicted') : failure ? failure.status : 'nonexistent';
+      // A citation that does not exist is fabrication and always counts against the seller. A quote
+      // that fails to match a page we did retrieve is a bad citation, not a lie: it simply earns no
+      // credit towards the quota. Otherwise supplying a fourth source could sink three good ones.
       if (status === 'nonexistent') unsupported.push(`Citation does not exist in the reference index: ${source.url}`);
-      else if (status === 'contradicted') unsupported.push(`Quote not grounded (${quote_match_ratio.toFixed(2)} of word sequences matched): ${source.url}`);
+      else if (status === 'contradicted') notes.push(`Quote not grounded (${quote_match_ratio.toFixed(2)} of word sequences matched); this citation earns no credit: ${source.url}`);
       else if (status === 'grounded') passages.push({ citation_index, document_id: doc!.id, url: doc!.url, quote: source.quote, passage: doc!.text });
       return { url: source.url, exists: !!doc, quote_matches: quoteMatches, quote_match_ratio, status, ...(failure ? { unverifiable_reason: failure.reason } : {}), supports_verdict: false, ...(doc ? { document_id: doc.id } : {}) };
     });
@@ -112,13 +116,15 @@ export class Grounding {
         // A passage can support 'supported' or 'refuted'. Nothing can positively establish
         // 'insufficient_evidence', so requiring entailment for it would reject every honest
         // report that the public record does not settle the claim.
-        if (!assessment.supports_verdict && input.submission.verdict !== 'insufficient_evidence') unsupported.push(`Indexed passage does not establish the submitted ${input.submission.verdict} verdict for this claim: ${citation.url}`);
+        // Same principle: a passage that does not establish the verdict is an unhelpful citation, not
+        // a dishonest one, so it stops counting towards the quota rather than failing the submission.
+        if (!assessment.supports_verdict && input.submission.verdict !== 'insufficient_evidence') notes.push(`Indexed passage does not establish the submitted ${input.submission.verdict} verdict; this citation earns no credit: ${citation.url}`);
       }
     }
     if (!citations.length) unsupported.push('No citations supplied.');
     const combined = new Map(references.map(d => [d.id, d]));
     for (const doc of docs) if (input.submission.sources.some(s => s.url === doc.url) && !combined.has(doc.id)) combined.set(doc.id, doc);
-    return { unsupported_claims: unsupported, source: 'elasticsearch', mocked: this.runtime.mocked('elasticsearch') || (passages.length > 0 && this.runtime.mocked('openai')), citations, references: evidenceDocuments([...combined.values()]) };
+    return { unsupported_claims: unsupported, uncredited_citations: notes, source: 'elasticsearch', mocked: this.runtime.mocked('elasticsearch') || (passages.length > 0 && this.runtime.mocked('openai')), citations, references: evidenceDocuments([...combined.values()]) };
   }
 }
 

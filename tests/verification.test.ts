@@ -30,7 +30,9 @@ describe('payment gate', () => {
     const result = await verify(await input('fabricator'), services);
     expect(result.judge_a.pass && result.judge_b.pass).toBe(true);
     expect(result.resolver_verdict.final_pass).toBe(false);
-    expect(result.grounding_check.unsupported_claims).toHaveLength(3);
+    // Invented sources are still charged to the seller; a real page it misquoted would not be.
+    expect(result.grounding_check.unsupported_claims.length).toBeGreaterThan(0);
+    expect(result.grounding_check.citations.some(c => c.supports_verdict)).toBe(false);
   });
   it('fails under-sourced work specifically on citation count', async () => {
     const result = await verify(await input('sloppy'), services);
@@ -58,7 +60,11 @@ describe('payment gate', () => {
   });
   it('rejects a correct quote used to support the opposite conclusion', async () => {
     const value = await input('reliable'); value.submission.verdict = 'supported';
-    expect((await verify(value, services)).grounding_check.unsupported_claims).toHaveLength(3);
+    const result = await verify(value, services);
+    // The quotes are real, so this is not fabrication; they simply earn no credit and the work fails.
+    expect(result.resolver_verdict.final_pass).toBe(false);
+    expect(result.grounding_check.citations.some(c => c.supports_verdict)).toBe(false);
+    expect(result.grounding_check.uncredited_citations).toHaveLength(3);
   });
   it('runs both judges concurrently', async () => {
     let count = 0; let release!: () => void;

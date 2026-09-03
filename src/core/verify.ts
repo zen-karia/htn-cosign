@@ -27,10 +27,15 @@ export async function verify(input: BlindInput, services: VerificationServices):
   // not reach are excluded rather than held against the seller, so a blocked publisher costs a
   // citation but is never mistaken for a fabricated one.
   const canonical = (value: string) => { try { const u = new URL(value); u.hash = ''; return u.href.replace(/\/$/, ''); } catch { return value; } };
-  const verified = grounding.citations.filter(c => c.status === undefined || c.status === 'grounded');
+  // Credit a citation only if we could read its source and that passage actually establishes the
+  // verdict. Nothing can positively establish insufficient_evidence, so that verdict needs grounding
+  // alone. Citations that earn no credit reduce the count; they no longer fail the submission.
+  const requiresEntailment = input.submission.verdict !== 'insufficient_evidence';
+  const verified = grounding.citations.filter(c => (c.status === undefined || c.status === 'grounded') && (!requiresEntailment || c.supports_verdict));
   const unverifiable = grounding.citations.filter(c => c.status === 'unverifiable');
   const count = new Set(verified.map(c => canonical(c.url))).size;
-  if (count < input.acceptance_criteria.min_citations) failures.push(`min_citations: required ${input.acceptance_criteria.min_citations} verifiable citations, received ${count}${unverifiable.length ? ` (${unverifiable.length} source(s) could not be retrieved and were not counted)` : ''}`);
+  const skipped = [unverifiable.length ? `${unverifiable.length} source(s) could not be retrieved` : '', grounding.uncredited_citations?.length ? `${grounding.uncredited_citations.length} earned no credit` : ''].filter(Boolean).join(', ');
+  if (count < input.acceptance_criteria.min_citations) failures.push(`min_citations: required ${input.acceptance_criteria.min_citations} verifiable citations, received ${count}${skipped ? ` (${skipped})` : ''}`);
   if (grounding.unsupported_claims.length) failures.push(...grounding.unsupported_claims.map(x => `citations_must_be_grounded: ${x}`));
   // Our own retrieval is direct evidence; a third-party index failing to find a source it does not
   // crawl is not. Only let the scan veto when something we could not independently ground is flagged.

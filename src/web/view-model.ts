@@ -78,13 +78,17 @@ export function sellerViewModels(task?: Task): SellerViewModel[] {
   return task.slots.map((slot, index) => {
     const deliveries = task.deliveries.filter(delivery => delivery.seller_id === slot.seller_id);
     const verifications = deliveries.map(delivery => delivery.verification).filter(Boolean);
-    const failed = deliveries.some(delivery => delivery.dispute || delivery.verification && !delivery.verification.resolver_verdict.final_pass);
+    // Blocked means nothing survived review. Marking a seller blocked because one of its sub-claims
+    // failed turned every partly successful seller red mid-run, then green again at settlement.
+    const reviewed = deliveries.filter(delivery => delivery.verification);
+    const failed = deliveries.length > 0 && reviewed.length === deliveries.length && reviewed.every(delivery => !delivery.verification!.resolver_verdict.final_pass);
+    const someVerified = reviewed.some(delivery => delivery.verification!.resolver_verdict.final_pass);
     const pending = deliveries.length === 0 || verifications.length < deliveries.length;
     // A seller paid for only some of its sub-claims is neither a clean pass nor a rejection.
     const partial = slot.state === 'paid' && slot.total_units !== undefined && slot.verified_units !== undefined && slot.verified_units < slot.total_units;
     const released = slot.released_sol ?? (slot.state === 'paid' ? task.payment_amount_sol : 0);
     const returned = slot.returned_sol ?? (slot.state === 'refunded' ? task.payment_amount_sol : 0);
-    const tone: SellerTone = partial ? 'warning' : slot.state === 'paid' ? 'success' : slot.state === 'refunded' || failed ? 'danger' : pending ? 'neutral' : 'warning';
+    const tone: SellerTone = partial ? 'warning' : slot.state === 'paid' ? 'success' : pending ? 'neutral' : slot.state === 'refunded' || failed ? 'danger' : someVerified ? 'warning' : 'success';
     return {
       id: slot.seller_id,
       name: sellerName(slot.seller_id),
@@ -93,7 +97,7 @@ export function sellerViewModels(task?: Task): SellerViewModel[] {
       deliveries,
       submissionCount: deliveries.length,
       verdict: deliveries[0]?.content.verdict.replaceAll('_', ' ') ?? 'Awaiting submission',
-      paymentLabel: slot.state === 'paid' ? (partial ? 'Partly paid' : 'Paid') : slot.state === 'refunded' ? 'Refunded' : failed ? 'Blocked' : pending ? 'Pending' : 'In review',
+      paymentLabel: slot.state === 'paid' ? (partial ? 'Partly paid' : 'Paid') : slot.state === 'refunded' ? 'Refunded' : pending ? (deliveries.length ? `In review (${reviewed.length} of ${deliveries.length})` : 'Pending') : failed ? 'Blocked' : someVerified ? 'Partly verified' : 'Verified',
       tone,
       groundingPassed: verifications.length ? verifications.every(result => result!.grounding_check.unsupported_claims.length === 0) : undefined,
       hallucinationPassed: verifications.length ? verifications.every(result => !result!.hallucination_check.flagged) : undefined,

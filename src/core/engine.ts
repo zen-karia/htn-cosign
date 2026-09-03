@@ -59,9 +59,11 @@ export class Engine {
     this.escrow = escrow || new Escrow(this.runtime);
     this.verification = {
       grounding: i => this.ground.check(i),
+      // The bibliography scan corroborates; retrieval and entailment are what bind. A vendor outage
+      // once stalled an entire run, which is a worse outcome than proceeding without its opinion.
       hallucination: i => task.request.execution_mode === 'live' && !env.GPTZERO_API_KEY
         ? Promise.resolve({ flagged: false, source: 'gptzero' as const, mocked: false, reasoning: 'GPTZero is not configured; optional bibliography scanning was skipped. Elastic retrieval and passage entailment remain binding.' })
-        : new Hallucination(this.runtime).check(i),
+        : new Hallucination(this.runtime).check(i).catch(() => ({ flagged: false, source: 'gptzero' as const, mocked: false, reasoning: 'Bibliography scan was unavailable; retrieval grounding and passage entailment remain binding.' })),
       judge: (w, i, r) => this.models.judge(w, i, r), tiebreak: (i, j, r) => this.models.tiebreak(i, j, r), modelsMocked: this.runtime.mocked('openai'), span,
     };
   }
@@ -172,7 +174,7 @@ export class Engine {
             };
             // One rejected submission costs a seller that sub-claim, not the whole allocation, so this
             // reports the verification outcome rather than announcing a payment decision.
-            await this.event('judge.completed', result.resolver_verdict.final_pass ? 'Both reviews and hard gates resolved to approval.' : `NOT VERIFIED: ${result.failed_criteria.join('; ')}`, result.mocked);
+            await this.event('judge.completed', `${delivery.seller_id}: ${result.resolver_verdict.final_pass ? 'both reviews and hard gates resolved to approval.' : `NOT VERIFIED — ${result.failed_criteria.join('; ')}`}`, result.mocked);
           } catch (err) { delivery.error = 'Verification service unavailable; payment remains locked.'; await this.save(task); throw err; }
         }));
         const failed = results.find(r => r.status === 'rejected'); if (failed?.status === 'rejected') throw failed.reason;

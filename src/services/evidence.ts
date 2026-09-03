@@ -7,6 +7,9 @@ const MAX_SOURCE_BYTES = 2_000_000;
 // excluded precisely the sources worth citing. Parsing costs Worker CPU, so the allowance is raised
 // only for PDFs, where the extra bytes buy real evidence, and not for HTML.
 const MAX_PDF_BYTES = 8_000_000;
+// Institutional pages run long, and a citation from the back half of one is not a worse citation.
+// Truncating at 30k silently made every such quote unverifiable; the embedding is capped separately.
+const MAX_INDEXED_CHARS = 120_000;
 const blockedHost = (hostname: string) => {
   const host = hostname.toLowerCase();
   return host === 'localhost' || host.endsWith('.localhost') || host === '0.0.0.0' || host === '::1'
@@ -114,7 +117,7 @@ export class EvidenceRetriever {
         id: `src_${identity.slice(0, 24)}`, url, canonical_url: finalUrl,
         title: suppliedTitle || (isPdf ? host : pageTitle(raw, host)), publisher: host,
         retrieved_at: new Date().toISOString(), content_hash: hash,
-        snippet: text.slice(0, 1000), text: text.slice(0, 30_000),
+        snippet: text.slice(0, 1000), text: text.slice(0, MAX_INDEXED_CHARS),
       };
     });
   }

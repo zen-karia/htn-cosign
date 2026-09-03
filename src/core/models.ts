@@ -65,7 +65,7 @@ export type CitationStatus = 'grounded' | 'contradicted' | 'nonexistent' | 'unve
 export interface RetrievalFailure { reason: string; status: 'nonexistent' | 'unverifiable'; }
 export interface RetrievalOutcome { documents: ReferenceDocument[]; failures: Record<string, RetrievalFailure>; }
 export interface GroundingResult {
-  unsupported_claims: string[]; source: 'elasticsearch'; mocked: boolean;
+  unsupported_claims: string[]; uncredited_citations?: string[]; source: 'elasticsearch'; mocked: boolean;
   citations: { url: string; exists: boolean; quote_matches: boolean; quote_match_ratio?: number; status?: CitationStatus; unverifiable_reason?: string; supports_verdict: boolean; document_id?: string; entailment_reasoning?: string; entailment_mocked?: boolean }[];
   references: ReferenceDocument[];
 }

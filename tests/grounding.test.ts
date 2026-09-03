@@ -38,7 +38,8 @@ describe('passage entailment grounding', () => {
     transport.mockResolvedValue(response([{ ...assessment, supports_verdict: false, reasoning: 'The cited passage does not establish the claim.' }]));
     const result = await ground.check(input());
     expect(result.citations[0].supports_verdict).toBe(false);
-    expect(result.unsupported_claims).toHaveLength(1);
+    expect(result.unsupported_claims).toEqual([]);
+    expect(result.uncredited_citations).toHaveLength(1);
     expect(JSON.stringify(transport.mock.calls)).not.toContain('assertions');
     expect(result.references[0]).not.toHaveProperty('assertions');
   });
@@ -48,7 +49,9 @@ describe('passage entailment grounding', () => {
     const value = input();
     value.submission.sources = [{ url: 'https://missing.example/report', quote: document.text }, { url: document.url, quote: 'Harbor Transit operated 42 electric buses throughout 2025.' }];
     const result = await ground.check(value);
-    expect(result.unsupported_claims).toHaveLength(2);
+    // The missing URL is fabrication; the wrong quote on a real page only forfeits credit.
+    expect(result.unsupported_claims).toHaveLength(1);
+    expect(result.uncredited_citations).toHaveLength(1);
     expect(result.citations.every(c => !c.supports_verdict)).toBe(true);
     expect(transport).not.toHaveBeenCalled();
   });
@@ -151,7 +154,9 @@ describe('passage entailment grounding', () => {
     const result = await ground.check(value);
     expect(result.citations[0].quote_matches).toBe(false);
     expect(result.citations[0].quote_match_ratio).toBe(0);
-    expect(result.unsupported_claims[0]).toContain('Quote not grounded');
+    // A real page it misquoted: the citation earns no credit, but it is not called fabrication.
+    expect(result.unsupported_claims).toEqual([]);
+    expect(result.uncredited_citations?.[0]).toContain('earns no credit');
     expect(transport).not.toHaveBeenCalled();
   });
 
