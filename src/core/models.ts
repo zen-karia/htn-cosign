@@ -69,7 +69,7 @@ export interface GroundingResult {
   citations: { url: string; exists: boolean; quote_matches: boolean; quote_match_ratio?: number; status?: CitationStatus; unverifiable_reason?: string; supports_verdict: boolean; document_id?: string; entailment_reasoning?: string; entailment_mocked?: boolean }[];
   references: ReferenceDocument[];
 }
-export interface HallucinationResult { flagged: boolean; source: 'gptzero'; mocked: boolean; reasoning: string; }
+export interface HallucinationResult { flagged: boolean; source: 'gptzero'; mocked: boolean; reasoning: string; scanned?: number; unreferenced?: number; }
 export interface VerificationResult {
   submission_id: string; judge_a: JudgeVerdict; judge_b: JudgeVerdict; agreement: boolean;
   grounding_check: GroundingResult; hallucination_check: HallucinationResult;

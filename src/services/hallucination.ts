@@ -17,9 +17,15 @@ const Scan = z.object({
     text: z.string().optional(),
     citation_exists: z.object({
       status: z.string().optional(),
+      score: z.number().nullish(),
+      hallucination_label: z.string().nullish(),
       hallucination_explanation: z.string().nullish(),
       justification: z.string().nullish(),
     }).nullish(),
+    // Whether the scanner could tie this citation to a claim in the prose. A source listed in the
+    // bibliography that backs nothing is padding, and no other check in the pipeline sees it:
+    // grounding only validates citations that were offered against a claim.
+    claim_reference: z.object({ has_reference: z.boolean().nullish() }).nullish(),
   })).default([]),
 });
 
@@ -50,15 +56,19 @@ export class Hallucination {
       // proves index membership, and one vendor's uncertainty is not evidence of a lie.
       const fake = citations.filter(c => c.citation_exists?.status === 'fake');
       const unsure = citations.filter(c => c.citation_exists?.status === 'unsure');
-      if (!citations.length) return { flagged: false, source: 'gptzero', mocked: false, reasoning: 'Bibliography scan parsed no citations from the submission; grounding remains the binding source check.' };
+      const unreferenced = citations.filter(c => c.claim_reference?.has_reference === false);
+      if (!citations.length) return { flagged: false, source: 'gptzero', mocked: false, scanned: 0, unreferenced: 0, reasoning: 'Bibliography scan parsed no citations from the submission; grounding remains the binding source check.' };
       const detail = fake.map(c => c.citation_exists?.hallucination_explanation || c.citation_exists?.justification || c.text || 'unnamed citation').join('; ');
+      const padding = unreferenced.length ? ` ${unreferenced.length} of ${citations.length} cited source(s) back no claim in the submission.` : '';
       return {
         flagged: fake.length > 0,
         source: 'gptzero',
         mocked: false,
-        reasoning: fake.length
+        scanned: citations.length,
+        unreferenced: unreferenced.length,
+        reasoning: (fake.length
           ? `Bibliography scan could not find ${fake.length} of ${citations.length} cited source(s) in GPTZero's index or on the public web: ${detail}`
-          : `Bibliography scan located all ${citations.length} cited source(s)${unsure.length ? `; ${unsure.length} matched with low confidence` : ''}.`,
+          : `Bibliography scan located all ${citations.length} cited source(s)${unsure.length ? `; ${unsure.length} matched with low confidence` : ''}.`) + padding,
       };
     });
   }

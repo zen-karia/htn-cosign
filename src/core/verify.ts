@@ -44,6 +44,10 @@ export async function verify(input: BlindInput, services: VerificationServices):
   const checkable = grounding.citations.filter(c => c.status !== 'unverifiable');
   const everyCheckableGrounded = checkable.length > 0 && checkable.every(c => c.status === undefined || c.status === 'grounded');
   if (hallucination.flagged && !everyCheckableGrounded) failures.push(`must_pass_hallucination_check: ${hallucination.reasoning}`);
+  // Nothing else in the pipeline notices a bibliography that backs no claim: grounding only checks
+  // the citations that were offered. Requiring every one of them to be unreferenced keeps this to
+  // the unambiguous case, where the submission's prose rests on nothing it cited.
+  if ((hallucination.scanned ?? 0) >= 2 && hallucination.unreferenced === hallucination.scanned) failures.push(`must_pass_hallucination_check: none of the ${hallucination.scanned} cited source(s) are referenced by any claim in the submission`);
   const agreement = a.pass === b.pass;
   let decision = { final_pass: a.pass && b.pass, confidence: Math.min(a.score, b.score), reasoning: agreement ? 'Independent judges agree.' : '' };
   if (!agreement) decision = await services.span('resolver', () => services.tiebreak(input, [a, b], grounding.references));
