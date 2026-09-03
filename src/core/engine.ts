@@ -158,14 +158,21 @@ export class Engine {
           const input = this.blind(delivery);
           try {
             const result = await verify(input, this.verification);
-            delivery.verification = { submission_id: delivery.submission_id, ...result }; delete delivery.error;
+            // Judging needs the full passages, but keeping a copy of every retrieved page on every
+            // delivery made a decomposed task exceed the Durable Object's per-value storage limit and
+            // stall the run. The task already holds one copy in evidence_documents, and the evidence
+            // view only renders this metadata, so the persisted copy keeps the fields and drops the body.
+            const grounding_check = { ...result.grounding_check, references: result.grounding_check.references.map(reference => ({ ...reference, text: '' })) };
+            delivery.verification = { submission_id: delivery.submission_id, ...result, grounding_check }; delete delivery.error;
             if (!result.resolver_verdict.final_pass) delivery.dispute = {
               dispute_id: crypto.randomUUID(), task_id: task.task_id, submission_id: delivery.submission_id,
               authorization_scope: `Verify “${input.claim}” with rubric ${JSON.stringify(task.acceptance_criteria)}`,
               action_taken: `Submitted ${input.submission.verdict} with ${input.submission.sources.length} citation(s): ${input.submission.reasoning}`,
               delta: result.failed_criteria.join('; '), failed_criteria: result.failed_criteria, resolution: 'escalated',
             };
-            await this.event('judge.completed', result.resolver_verdict.final_pass ? 'Both reviews and hard gates resolved to approval.' : `PAYMENT BLOCKED: ${result.failed_criteria.join('; ')}`, result.mocked);
+            // One rejected submission costs a seller that sub-claim, not the whole allocation, so this
+            // reports the verification outcome rather than announcing a payment decision.
+            await this.event('judge.completed', result.resolver_verdict.final_pass ? 'Both reviews and hard gates resolved to approval.' : `NOT VERIFIED: ${result.failed_criteria.join('; ')}`, result.mocked);
           } catch (err) { delivery.error = 'Verification service unavailable; payment remains locked.'; await this.save(task); throw err; }
         }));
         const failed = results.find(r => r.status === 'rejected'); if (failed?.status === 'rejected') throw failed.reason;
