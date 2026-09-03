@@ -73,7 +73,7 @@ function SellerCard({ seller, onInspect }: { seller: SellerViewModel; onInspect?
       <GateRow label="Hallucination gate" state={seller.hallucinationPassed}/>
       <GateRow label="Final verification" state={seller.verificationPassed}/>
     </div>
-    <footer><span>{seller.slot.state === 'paid' ? `${formatSol(seller.amount)} SOL released` : seller.slot.state === 'refunded' ? `${formatSol(seller.amount)} SOL returned` : seller.verdict}</span>{seller.deliveries.length > 0 && onInspect && <button type="button" onClick={onInspect} aria-label={`Inspect ${seller.name}`}>↗</button>}</footer>
+    <footer><span>{seller.slot.state === 'paid' ? `${formatSol(seller.amount)} SOL released${seller.settlementNote ? ` · ${seller.settlementNote}` : ''}` : seller.slot.state === 'refunded' ? `${formatSol(seller.amount)} SOL returned` : seller.verdict}</span>{seller.deliveries.length > 0 && onInspect && <button type="button" onClick={onInspect} aria-label={`Inspect ${seller.name}`}>↗</button>}</footer>
   </article>;
 }
 
