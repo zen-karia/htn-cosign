@@ -66,7 +66,7 @@ export interface RetrievalFailure { reason: string; status: 'nonexistent' | 'unv
 export interface RetrievalOutcome { documents: ReferenceDocument[]; failures: Record<string, RetrievalFailure>; }
 export interface GroundingResult {
   unsupported_claims: string[]; uncredited_citations?: string[]; source: 'elasticsearch'; mocked: boolean;
-  citations: { url: string; exists: boolean; quote_matches: boolean; quote_match_ratio?: number; status?: CitationStatus; unverifiable_reason?: string; supports_verdict: boolean; document_id?: string; entailment_reasoning?: string; entailment_mocked?: boolean }[];
+  citations: { url: string; quote?: string; exists: boolean; quote_matches: boolean; quote_match_ratio?: number; status?: CitationStatus; unverifiable_reason?: string; supports_verdict: boolean; document_id?: string; entailment_reasoning?: string; entailment_mocked?: boolean }[];
   references: ReferenceDocument[];
 }
 export interface HallucinationResult { flagged: boolean; source: 'gptzero'; mocked: boolean; reasoning: string; scanned?: number; unreferenced?: number; }

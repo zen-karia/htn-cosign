@@ -35,7 +35,7 @@ export async function verify(input: BlindInput, services: VerificationServices):
   const unverifiable = grounding.citations.filter(c => c.status === 'unverifiable');
   const count = new Set(verified.map(c => canonical(c.url))).size;
   const skipped = [unverifiable.length ? `${unverifiable.length} source(s) could not be retrieved` : '', grounding.uncredited_citations?.length ? `${grounding.uncredited_citations.length} earned no credit` : ''].filter(Boolean).join(', ');
-  if (count < input.acceptance_criteria.min_citations) failures.push(`min_citations: required ${input.acceptance_criteria.min_citations} verifiable citations, received ${count}${skipped ? ` (${skipped})` : ''}`);
+  if (count < input.acceptance_criteria.min_citations) failures.push(`min_citations: required ${input.acceptance_criteria.min_citations} independent sources, verified ${verified.length} citation(s) across ${count} source(s)${skipped ? `; ${skipped}` : ''}`);
   if (grounding.unsupported_claims.length) failures.push(...grounding.unsupported_claims.map(x => `citations_must_be_grounded: ${x}`));
   // Our own retrieval is direct evidence; a third-party index failing to find a source it does not
   // crawl is not. Only let the scan veto when something we could not independently ground is flagged.

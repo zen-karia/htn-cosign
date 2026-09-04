@@ -100,7 +100,7 @@ describe('payment decisions ignore our own retrieval limits', () => {
     const value = submission([{ url: document.url, quote: document.text }, { url: blocked, quote: 'Unreachable passage.' }]);
     const result = await verify({ ...value, acceptance_criteria: strict }, services(grounding, false));
     const quota = result.failed_criteria.find(f => f.startsWith('min_citations'));
-    expect(quota).toContain('received 1');
+    expect(quota).toContain('across 1 source(s)');
     expect(quota).toContain('could not be retrieved');
   });
 

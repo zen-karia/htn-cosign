@@ -11,8 +11,8 @@ export function describeCriterion(raw: string): string {
   const where = url ? ` (${host(url)})` : '';
   switch (key) {
     case 'min_citations': {
-      const [, need, got] = detail.match(/required (\d+) verifiable citations, received (\d+)/) ?? [];
-      return need ? `Needs ${need} verified citations, has ${got}` : `Not enough verified citations`;
+      const [, need, cites, got] = detail.match(/required (\d+) independent sources, verified (\d+) citation\(s\) across (\d+) source/) ?? [];
+      return need ? `Needs ${need} independent sources, has ${got} (${cites} verified citation${cites === '1' ? '' : 's'})` : 'Not enough independent sources';
     }
     case 'citations_must_be_grounded': {
       if (detail.startsWith('Citation does not exist')) return `Cited source does not exist${where}`;

@@ -104,7 +104,7 @@ export class Grounding {
       if (status === 'nonexistent') unsupported.push(`Citation does not exist in the reference index: ${source.url}`);
       else if (status === 'contradicted') notes.push(`Quote not grounded (${quote_match_ratio.toFixed(2)} of word sequences matched); this citation earns no credit: ${source.url}`);
       else if (status === 'grounded') passages.push({ citation_index, document_id: doc!.id, url: doc!.url, quote: source.quote, passage: doc!.text });
-      return { url: source.url, exists: !!doc, quote_matches: quoteMatches, quote_match_ratio, status, ...(failure ? { unverifiable_reason: failure.reason } : {}), supports_verdict: false, ...(doc ? { document_id: doc.id } : {}) };
+      return { url: source.url, quote: source.quote, exists: !!doc, quote_matches: quoteMatches, quote_match_ratio, status, ...(failure ? { unverifiable_reason: failure.reason } : {}), supports_verdict: false, ...(doc ? { document_id: doc.id } : {}) };
     });
     if (passages.length) {
       const assessments = await this.models.entailment(input.claim, input.submission.verdict, passages);
