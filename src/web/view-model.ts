@@ -1,4 +1,4 @@
-import type { Delivery, Receipt, SellerSlot, Task } from '../core/models';
+import type { Delivery, Receipt, SellerSlot, Task, ReferenceDocument } from '../core/models';
 
 export const protocolPhases: Task['phase'][] = ['initialize', 'decompose', 'sellers', 'verify', 'reconcile', 'settle', 'complete'];
 
@@ -175,4 +175,34 @@ export function receiptPayload(task: Task) {
     sellers: sellerViewModels(task).map(seller => ({ id: seller.id, state: seller.slot.state, amount_sol: seller.amount, receipt: seller.slot.receipt })),
     receipts: task.receipts,
   };
+}
+
+// The quota counts independent sources, so the evidence view must show the same unit. Quotes are
+// still checked one by one underneath; they are grouped under the source they came from.
+export interface CitedSource {
+  url: string; title?: string; publisher?: string; retrieved_at?: string; content_hash?: string;
+  status: 'supports' | 'not supported' | 'pending';
+  quotes: { quote: string; entailment?: string; supported?: boolean }[];
+}
+export function citedSources(delivery?: Delivery, references: ReferenceDocument[] = []): CitedSource[] {
+  const sources = delivery?.content.sources ?? [];
+  const citations = delivery?.verification?.grounding_check.citations ?? [];
+  const grouped = new Map<string, CitedSource>();
+  sources.forEach((source, index) => {
+    const occurrence = sources.slice(0, index).filter(other => other.url === source.url).length;
+    const citation = citations.find(c => c.url === source.url && c.quote === source.quote)
+      ?? citations.filter(c => c.url === source.url)[occurrence];
+    const reference = references.find(item => item.url === source.url);
+    const entry = grouped.get(source.url) ?? {
+      url: source.url, title: reference?.title ?? source.title, publisher: reference?.publisher,
+      retrieved_at: reference?.retrieved_at, content_hash: reference?.content_hash,
+      status: 'pending' as CitedSource['status'], quotes: [],
+    };
+    entry.quotes.push({ quote: source.quote, entailment: citation?.entailment_reasoning, supported: citation?.supports_verdict });
+    // A source counts when any passage from it held up, which is what the quota credits.
+    if (citation?.supports_verdict) entry.status = 'supports';
+    else if (citation && entry.status !== 'supports') entry.status = 'not supported';
+    grouped.set(source.url, entry);
+  });
+  return [...grouped.values()];
 }
