@@ -125,6 +125,10 @@ export class Engine {
             ? this.models.researchSeller(sub.text, task.acceptance_criteria, agent)
             : produce(profile!.behavior, sub.text, task.acceptance_criteria, references[index], this.models)));
           if (task.request.execution_mode === 'live') content.sources = content.sources.map(source => ({ ...source, url: canonicalUrl(source.url) }));
+          // The same passage from the same page is one piece of evidence however many times it is
+          // listed. Different quotes from one page are kept: they support different parts of a claim.
+          const seen = new Set<string>();
+          content.sources = content.sources.filter(source => { const key = `${source.url}\u0000${source.quote}`; return seen.has(key) ? false : (seen.add(key), true); });
           const delivery = { submission_id: crypto.randomUUID(), seller_id: slot.seller_id, sub_claim_id: sub.sub_claim_id, content };
           task.deliveries.push(delivery);
           if (task.request.execution_mode === 'live') {

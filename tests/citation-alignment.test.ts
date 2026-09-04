@@ -37,3 +37,17 @@ describe('a citation can be paired with the quote it came from', () => {
     expect(result.citations[0].url).not.toBe(original[0].url);
   });
 });
+
+describe('the same passage cited twice is one citation', () => {
+  it('keeps different quotes from one page but collapses exact repeats', async () => {
+    const { createTask, Engine } = await import('../src/core/engine');
+    const { DEMO_CLAIM } = await import('../src/data/corpus');
+    const task = createTask({ claim: DEMO_CLAIM, scenario: 'reliable', seller_count: 2 }, {});
+    const engine = new Engine(task, {}, async () => {});
+    while (task.phase !== 'complete') await engine.step();
+    for (const delivery of task.deliveries) {
+      const pairs = delivery.content.sources.map(s => `${s.url}\u0000${s.quote}`);
+      expect(new Set(pairs).size, `duplicate citation in ${delivery.seller_id}`).toBe(pairs.length);
+    }
+  });
+});
