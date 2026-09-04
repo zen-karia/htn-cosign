@@ -48,12 +48,19 @@ export function StatusBadge({ children, tone = 'neutral' }: { children: ReactNod
   return <span className={`status-badge ${tone}`}>{children}</span>;
 }
 
+// Order matters: a negation has to be recognised before the word it negates, or 'not supported'
+// matches 'support' and renders as a pass. Partial outcomes are neither, so they are checked next.
+export function verdictTone(verdict?: string): SellerTone {
+  const value = (verdict || 'pending').toLowerCase().replaceAll('_', ' ');
+  if (/\bnot |\bun|refut|refund|blocked|fail|stall|reject/.test(value)) return 'danger';
+  if (/partly|partial|contest|disput|insufficient/.test(value)) return 'warning';
+  if (/support|verified|paid|complete|approv/.test(value)) return 'success';
+  return 'neutral';
+}
+
 export function VerdictBadge({ verdict }: { verdict?: string }) {
   const normalized = (verdict || 'pending').toLowerCase();
-  const tone: SellerTone = normalized.includes('support') || normalized.includes('paid') || normalized.includes('complete')
-    ? 'success' : normalized.includes('refut') || normalized.includes('refund') || normalized.includes('fail') || normalized.includes('stall')
-      ? 'danger' : normalized.includes('contest') || normalized.includes('disput') ? 'warning' : 'neutral';
-  return <StatusBadge tone={tone}>{normalized.replaceAll('_', ' ')}</StatusBadge>;
+  return <StatusBadge tone={verdictTone(normalized)}>{normalized.replaceAll('_', ' ')}</StatusBadge>;
 }
 
 export function MoneyDisplay({ amount, asset = 'SOL', label, large = false }: { amount: number; asset?: string; label?: string; large?: boolean }) {
