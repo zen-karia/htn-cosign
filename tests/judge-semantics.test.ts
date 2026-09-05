@@ -44,3 +44,37 @@ describe('a correct refutation is not a defective submission', () => {
     expect(verdict.unsupported_claims).toEqual(['The submission overstates the incineration share.']);
   });
 });
+
+describe('a judge that refutes a claim is describing the claim, not the submission', () => {
+  const sentence = 'The entire collider is powered by on-site solar panels.';
+  const paragraph = `The Large Hadron Collider is a 27-kilometre ring of magnets at CERN. ${sentence}`;
+  const paragraphInput: BlindInput = {
+    claim: paragraph,
+    acceptance_criteria: Rubric.parse({ min_citations: 1 }),
+    submission: { verdict: 'refuted', reasoning: 'The collider draws from the French grid.', sources: [{ url: reference.url, quote: reference.text }] },
+  };
+  function judgeParagraph(verdict: string, unsupported_claims: string[]) {
+    const runtime = new Runtime({ MOCK_MODE_OPENAI: 'false', OPENAI_API_KEY: 'test-only' });
+    vi.spyOn(runtime, 'json').mockResolvedValue({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({ verdict, confidence: 0.95, grounded: true, unsupported_claims, evidence_ids: [reference.id], reason: 'Assessed.' }) } }] });
+    return new Models(runtime).judge('a', paragraphInput, [reference]);
+  }
+
+  it('does not fail work because the judge named the false sentence inside the claim', async () => {
+    const verdict = await judgeParagraph('refuted', [sentence]);
+    expect(verdict.pass).toBe(true);
+    expect(verdict.unsupported_claims).toEqual([]);
+  });
+
+  it('still faults an assertion that is not part of the claim', async () => {
+    const verdict = await judgeParagraph('refuted', ['The submission invented a second detector ring.']);
+    expect(verdict.pass).toBe(false);
+  });
+
+  it('still faults the submission when the judge upholds the claim', async () => {
+    const supported: BlindInput = { ...paragraphInput, submission: { ...paragraphInput.submission, verdict: 'supported' } };
+    const runtime = new Runtime({ MOCK_MODE_OPENAI: 'false', OPENAI_API_KEY: 'test-only' });
+    vi.spyOn(runtime, 'json').mockResolvedValue({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({ verdict: 'supported', confidence: 0.9, grounded: true, unsupported_claims: ['The submission invented a second detector ring.'], evidence_ids: [reference.id], reason: 'Assessed.' }) } }] });
+    const verdict = await new Models(runtime).judge('a', supported, [reference]);
+    expect(verdict.pass).toBe(false);
+  });
+});

@@ -160,10 +160,12 @@ export class Models {
       const pass = input.acceptance_criteria.verdict_enum.includes(input.submission.verdict);
       return { verdict: input.submission.verdict, confidence: pass ? 0.91 : 0.25, grounded: pass, unsupported_claims: pass ? [] : ['Submitted verdict is not authorized'], evidence_ids: view.map(d => d.id), reason: `[MOCKED] ${which === 'a' ? 'Structural rubric review' : 'Independent evidence review'}; grounding remains a separate veto.` };
     }).then(review => {
-      // The claim under verification is not an assertion of the submission. Listing it is what a
-      // correct `refuted` finding looks like, so it must never count as a defect in the work.
+      // No part of the claim under verification is an assertion of the submission, so naming the
+      // sentence that fails is what a correct `refuted` finding looks like, not a defect in the work.
+      // Anything outside the claim is the submission's own assertion and still counts against it.
       const claim = normalize(input.claim);
-      const unsupported_claims = review.unsupported_claims.filter(entry => normalize(entry) !== claim);
+      const partOfClaim = (entry: string) => { const value = normalize(entry); return value.length > 0 && (value === claim || claim.includes(value)); };
+      const unsupported_claims = review.unsupported_claims.filter(entry => !partOfClaim(entry));
       return JudgeVerdict.parse({
         score: review.confidence,
         pass: review.grounded && review.verdict === input.submission.verdict && unsupported_claims.length === 0,

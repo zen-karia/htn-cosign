@@ -54,7 +54,7 @@ export function verdictTone(verdict?: string): SellerTone {
   const value = (verdict || 'pending').toLowerCase().replaceAll('_', ' ');
   if (/\bnot |\bun|refut|refund|blocked|fail|stall|reject/.test(value)) return 'danger';
   if (/partly|partial|contest|disput|insufficient/.test(value)) return 'warning';
-  if (/support|verified|paid|complete|approv/.test(value)) return 'success';
+  if (/support|verified|paid|complete|approv|accepted/.test(value)) return 'success';
   return 'neutral';
 }
 
