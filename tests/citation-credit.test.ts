@@ -39,14 +39,15 @@ describe('citations earn credit rather than acting as a veto', () => {
     expect(result.resolver_verdict.final_pass).toBe(true);
   });
 
-  it('pays a share when fewer sources earn credit than were asked for', async () => {
+  it('pays in full when a single source holds up', async () => {
     const result = await verify(submission([
       { url: first.url, quote: first.text },
       { url: second.url, quote: 'A passage that appears on no page we retrieved at all.' },
     ]), services());
     expect(result.resolver_verdict.final_pass).toBe(true);
     expect(result.credited_sources).toBe(1);
-    expect(result.credit).toBe(0.5);
+    // One verified source is the whole job: corroboration comes from the other agents on the panel.
+    expect(result.credit).toBe(1);
   });
 
   it('fails outright when no source earns credit', async () => {
@@ -56,7 +57,7 @@ describe('citations earn credit rather than acting as a veto', () => {
     ]), services());
     expect(result.resolver_verdict.final_pass).toBe(false);
     expect(result.credit).toBe(0);
-    expect(result.failed_criteria.some(f => f.startsWith('min_citations'))).toBe(true);
+    expect(result.failed_criteria.some(f => f.startsWith('verifiable_citation'))).toBe(true);
   });
 
   it('never pays more than the whole fee for extra corroboration', async () => {

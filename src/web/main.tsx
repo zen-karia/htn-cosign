@@ -28,7 +28,6 @@ function App() {
   const [selected, setSelected] = useState<string>();
   const [route, setRoute] = useState<AppRoute>(routeFromPath);
   const [claim, setClaim] = useState('');
-  const [minCitations, setMinCitations] = useState(3);
   const [decompose, setDecompose] = useState(false);
   const [posting, setPosting] = useState(false);
   const [replaying, setReplaying] = useState(false);
@@ -80,7 +79,7 @@ function App() {
   const start = async (scenario: string, protectedFlow = true) => {
     setPosting(true); setError(''); setReplaying(false); replayTimers.current.forEach(clearTimeout);
     try {
-      const next = await api<Task>('/api/tasks', { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ claim, scenario, execution_mode: 'live', seller_count: 4, protected: protectedFlow, decompose, payment_amount_sol: 0.05, acceptance_criteria: { min_citations: minCitations } }) });
+      const next = await api<Task>('/api/tasks', { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ claim, scenario, execution_mode: 'live', seller_count: 4, protected: protectedFlow, decompose, payment_amount_sol: 0.05 }) });
       setTask(next); setSelected(next.task_id); setActiveDelivery(undefined); navigate('live');
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Unable to start verification.'); }
     finally { setPosting(false); }
@@ -119,7 +118,7 @@ function App() {
       {error && <div className="error-banner" role="alert"><span>!</span><p>{error}</p><button type="button" onClick={() => setError('')} aria-label="Dismiss error">×</button></div>}
       {task?.status === 'stalled' && <div className="error-banner" role="alert"><span>!</span><p>{task.error || 'A service is unavailable. Funds remain protected.'}</p>{!replaying && <button type="button" className="retry-button" onClick={() => api(`/api/tasks/${task.task_id}/retry`, { method: 'POST' }).catch(reason => setError(reason.message))}>Retry stage</button>}</div>}
       <div className="page-content">
-        {route === 'desk' && <DeskPage config={config} task={task} posting={posting} claim={claim} minCitations={minCitations} decompose={decompose} onClaim={setClaim} onCitations={setMinCitations} onDecompose={toggleDecompose} onStart={start} onNavigate={navigate} onInspect={inspect} replaying={replaying}/>}
+        {route === 'desk' && <DeskPage config={config} task={task} posting={posting} claim={claim} decompose={decompose} onClaim={setClaim} onDecompose={toggleDecompose} onStart={start} onNavigate={navigate} onInspect={inspect} replaying={replaying}/>}
         {route === 'live' && <LiveRunPage task={task} onNavigate={navigate} onInspect={inspect}/>}
         {route === 'evidence' && <EvidencePage task={task} activeDeliveryId={activeDelivery} onDelivery={setActiveDelivery} onNavigate={navigate}/>}
         {route === 'receipt' && <ReceiptPage task={task} onNavigate={navigate}/>}

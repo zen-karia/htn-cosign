@@ -3,7 +3,8 @@ import { describeCriterion } from '../src/core/criteria';
 
 describe('failure reasons read as sentences without losing the stored form', () => {
   it.each([
-    ['min_citations: required 3 independent sources, verified 3 citation(s) across 2 source(s); 2 earned no credit', 'Needs 3 independent sources, has 2 (3 verified citations)'],
+    ['verifiable_citation: no cited source could be verified', 'No cited source could be verified'],
+    ['verifiable_citation: no cited source could be verified (2 source(s) could not be retrieved)', 'No cited source could be verified (none could be retrieved)'],
     ['citations_must_be_grounded: Citation does not exist in the reference index: https://www.esa.int/a/b', 'Cited source does not exist (esa.int)'],
     ['citations_must_be_grounded: Quote not grounded (0.00 of word sequences matched): https://science.nasa.gov/mission/webb/x', 'Quote not found in its source (science.nasa.gov)'],
     ['citations_must_be_grounded: Indexed passage does not establish the submitted supported verdict for this claim: https://jwst-docs.stsci.edu/y', 'Source does not establish the verdict (jwst-docs.stsci.edu)'],

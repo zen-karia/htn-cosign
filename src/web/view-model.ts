@@ -181,7 +181,7 @@ export function receiptPayload(task: Task) {
 // still checked one by one underneath; they are grouped under the source they came from.
 export interface CitedSource {
   url: string; title?: string; publisher?: string; retrieved_at?: string; content_hash?: string;
-  status: 'supports' | 'not supported' | 'pending';
+  status: 'supports' | 'not supported' | 'missing' | 'unretrievable' | 'pending';
   quotes: { quote: string; entailment?: string; supported?: boolean }[];
 }
 export function citedSources(delivery?: Delivery, references: ReferenceDocument[] = []): CitedSource[] {
@@ -199,9 +199,13 @@ export function citedSources(delivery?: Delivery, references: ReferenceDocument[
       status: 'pending' as CitedSource['status'], quotes: [],
     };
     entry.quotes.push({ quote: source.quote, entailment: citation?.entailment_reasoning, supported: citation?.supports_verdict });
-    // A source counts when any passage from it held up, which is what the quota credits.
+    // A source counts when any passage from it held up. Otherwise say which kind of failure it was:
+    // a page that does not exist is fabrication, and must not read like an unhelpful citation.
     if (citation?.supports_verdict) entry.status = 'supports';
-    else if (citation && entry.status !== 'supports') entry.status = 'not supported';
+    else if (entry.status === 'supports') { /* one passage holding up settles it */ }
+    else if (citation?.status === 'nonexistent') entry.status = 'missing';
+    else if (citation?.status === 'unverifiable') entry.status = 'unretrievable';
+    else if (citation) entry.status = 'not supported';
     grouped.set(source.url, entry);
   });
   return [...grouped.values()];

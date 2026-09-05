@@ -10,10 +10,10 @@ export function describeCriterion(raw: string): string {
   const url = trailingUrl(detail);
   const where = url ? ` (${host(url)})` : '';
   switch (key) {
-    case 'min_citations': {
-      const [, need, cites, got] = detail.match(/required (\d+) independent sources, verified (\d+) citation\(s\) across (\d+) source/) ?? [];
-      return need ? `Needs ${need} independent sources, has ${got} (${cites} verified citation${cites === '1' ? '' : 's'})` : 'Not enough independent sources';
-    }
+    case 'verifiable_citation':
+      return detail.includes('could not be retrieved') ? 'No cited source could be verified (none could be retrieved)' : 'No cited source could be verified';
+    case 'min_citations':
+      return 'Not enough independent sources';
     case 'citations_must_be_grounded': {
       if (detail.startsWith('Citation does not exist')) return `Cited source does not exist${where}`;
       const [, ratio] = detail.match(/\(([\d.]+) of word sequences matched\)/) ?? [];

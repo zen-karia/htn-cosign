@@ -4,7 +4,9 @@ export const Verdict = z.enum(['supported', 'refuted', 'insufficient_evidence'])
 export type Verdict = z.infer<typeof Verdict>;
 export const Rubric = z.object({
   required_fields: z.array(z.enum(['verdict', 'reasoning', 'sources'])).min(1).default(['verdict', 'reasoning', 'sources']),
-  min_citations: z.number().int().min(1).max(10).default(3),
+  // Deprecated and ignored: corroboration comes from independent agents on the panel, not from a
+  // quota inside one submission. Still accepted so existing requests keep parsing.
+  min_citations: z.number().int().min(1).max(10).optional(),
   citations_must_be_grounded: z.literal(true).default(true),
   must_pass_hallucination_check: z.literal(true).default(true),
   verdict_enum: z.array(Verdict).min(1).default(['supported', 'refuted', 'insufficient_evidence']),
@@ -73,7 +75,7 @@ export interface HallucinationResult { flagged: boolean; source: 'gptzero'; mock
 export interface VerificationResult {
   submission_id: string; judge_a: JudgeVerdict; judge_b: JudgeVerdict; agreement: boolean;
   // Share of the commissioned evidence standard this submission actually delivered, 0 when it failed.
-  credit?: number; credited_sources?: number; required_sources?: number;
+  credit?: number; credited_sources?: number;
   grounding_check: GroundingResult; hallucination_check: HallucinationResult;
   resolver_verdict: { final_pass: boolean; method: 'consensus' | 'tiebreak'; confidence: number; reasoning: string };
   failed_criteria: string[]; mocked: boolean;

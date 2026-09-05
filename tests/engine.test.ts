@@ -111,9 +111,11 @@ describe('pool and decomposition', () => {
     // three were commissioned, so it earns that share instead of losing the whole allocation.
     expect(cedar.released_sol).toBe(0.05);
     expect(flint.released_sol).toBe(0);
-    expect(moss.released_sol).toBeCloseTo(0.05 / 3, 6);
+    // One verified source is enough now, so the sloppy seller earns its allocation in full.
+    expect(moss.released_sol).toBe(0.05);
     expect(iris.released_sol).toBe(0.05);
     expect(task.slots.map(s => s.state)).toEqual(['paid', 'refunded', 'paid', 'paid']);
+    expect(task.paid_sol).toBe(0.15);
     // Nothing is created or lost: every lamport is either released or returned.
     expect(Math.round(task.paid_sol * 1e9) + Math.round(task.refunded_sol * 1e9)).toBe(Math.round(0.2 * 1e9));
     expect(task.sub_claims[0].reconciled_verdict).toBe('contested'); expect(task.sub_claims[0].resolution?.verdict).toBe('refuted');
