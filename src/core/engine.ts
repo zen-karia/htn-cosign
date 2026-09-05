@@ -26,8 +26,8 @@ export function createTask(raw: unknown, env: Settings, id: string = crypto.rand
     : request.scenario === 'pool' ? profiles : profiles.filter(p => p.behavior === request.scenario);
   const addresses = JSON.parse(env.SOLANA_SELLER_ADDRESSES || '{}') as Record<string, string>;
   const serviceModes = live
-    ? { openai: false, gptzero: !env.GPTZERO_API_KEY, elasticsearch: false, evidence: false, solana: true, sentry: mockEnabled(env, 'sentry') }
-    : { openai: mockEnabled(env, 'openai'), gptzero: mockEnabled(env, 'gptzero'), elasticsearch: mockEnabled(env, 'elasticsearch'), evidence: true, solana: true, sentry: mockEnabled(env, 'sentry') };
+    ? { openai: false, gptzero: !env.GPTZERO_API_KEY, elasticsearch: false, evidence: false, solana: mockEnabled(env, 'solana'), sentry: mockEnabled(env, 'sentry') }
+    : { openai: mockEnabled(env, 'openai'), gptzero: mockEnabled(env, 'gptzero'), elasticsearch: mockEnabled(env, 'elasticsearch'), evidence: true, solana: mockEnabled(env, 'solana'), sentry: mockEnabled(env, 'sentry') };
   return {
     task_id: id, task_type: request.task_type, buyer_agent_id: 'buyer-agent', seller_agent_id: selected.length === 1 ? selected[0].seller_id : 'pool',
     claim: request.claim, payment_amount_sol: request.payment_amount_sol, acceptance_criteria: request.acceptance_criteria,

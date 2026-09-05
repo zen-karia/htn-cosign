@@ -84,12 +84,18 @@ describe('phase 1 end-to-end state machine', () => {
     const task = await run('reliable'); const saved = JSON.stringify(task);
     await new Engine(task, {}, async () => {}).step(); expect(JSON.stringify(task)).toBe(saved);
   });
-  it('pins settlement simulation to the task regardless of environment toggles', () => {
-    const task = createTask({ claim: DEMO_CLAIM }, { MOCK_MODE_SOLANA: 'false' });
-    const engine = new Engine(task, { MOCK_MODE_SOLANA: 'true' }, async () => {});
-    expect(engine.runtime.mocked('solana')).toBe(true);
-    const offline = createTask({ claim: DEMO_CLAIM }, {});
-    expect(new Engine(offline, { MOCK_MODE_SOLANA: 'false' }, async () => {}).runtime.mocked('solana')).toBe(true);
+  it('pins settlement to the mode the task was created with, whatever the environment says later', () => {
+    // A task settles the way it was funded. Toggling the environment mid-run must not change whether
+    // a payout is real, in either direction.
+    const live = createTask({ claim: DEMO_CLAIM }, { MOCK_MODE_SOLANA: 'false' });
+    expect(new Engine(live, { MOCK_MODE_SOLANA: 'true' }, async () => {}).runtime.mocked('solana')).toBe(false);
+    const simulated = createTask({ claim: DEMO_CLAIM }, {});
+    expect(new Engine(simulated, { MOCK_MODE_SOLANA: 'false' }, async () => {}).runtime.mocked('solana')).toBe(true);
+  });
+
+  it('defaults to simulated settlement unless the environment opts in', () => {
+    expect(createTask({ claim: DEMO_CLAIM }, {}).service_modes.solana).toBe(true);
+    expect(createTask({ claim: DEMO_CLAIM }, { MOCK_MODE_SOLANA: 'false' }).service_modes.solana).toBe(false);
   });
 });
 describe('pool and decomposition', () => {

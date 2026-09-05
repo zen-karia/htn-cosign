@@ -39,6 +39,12 @@ export async function digest(value: unknown): Promise<string> {
 export interface EscrowService { initialize(task: Task): Promise<Receipt>; settle(task: Task, slot: number, pass: boolean, hash: string, share?: number): Promise<Receipt>; }
 interface EscrowAccount { buyer: PublicKey; authority: PublicKey; taskHash: number[]; sellers: PublicKey[]; amountPerSeller: BN; states: number[]; evidenceHashes: number[][]; count: number; }
 
+
+// Settlement without the escrow program: the buyer pays the seller directly and the verification
+// evidence hash rides along in a memo, so the payment carries a commitment to what authorised it.
+// This records the decision on chain; it does not enforce it, because nothing holds the funds.
+const MEMO_PROGRAM = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
+
 export class Escrow implements EscrowService {
   constructor(private runtime: Runtime) {}
   async connection() {
@@ -65,6 +71,32 @@ export class Escrow implements EscrowService {
     const [pda] = PublicKey.findProgramAddressSync([Buffer.from('escrow'), buyer.publicKey.toBuffer(), hash], program.programId);
     const account = (program.account as unknown as { escrow: { fetchNullable: (key: PublicKey) => Promise<EscrowAccount | null> } }).escrow;
     return { connection, buyer, authority, program, hash, pda, account };
+  }
+
+  // Direct settlement used while the escrow program is not deployed. A release moves lamports to the
+  // seller; a refusal moves nothing, because the buyer never gave the funds up, and is recorded as a
+  // memo so the decision is still auditable on chain.
+  private async transferSettlement(task: Task, slot: number, pass: boolean, hash: string, amount_sol: number): Promise<Receipt> {
+    const operation = pass ? 'release' : 'refund';
+    const connection = await this.connection();
+    const buyer = this.key('SOLANA_BUYER_SECRET_KEY');
+    const seller = task.slots[slot];
+    const memo = `cosign ${operation} task=${task.task_id} slot=${slot} evidence=${hash}`;
+    const transaction = new Transaction();
+    if (pass) {
+      if (!seller?.address || seller.address.startsWith('SIMULATED-')) throw new ServiceUnavailable('solana', 'Seller has no payable address configured');
+      const lamports = Math.round(amount_sol * 1e9);
+      if (lamports <= 0) throw new ServiceUnavailable('solana', 'Refusing a zero-value release');
+      transaction.add(SystemProgram.transfer({ fromPubkey: buyer.publicKey, toPubkey: new PublicKey(seller.address), lamports }));
+    }
+    transaction.add({ keys: [], programId: MEMO_PROGRAM, data: Buffer.from(memo.slice(0, 560), 'utf8') });
+    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
+    transaction.recentBlockhash = blockhash;
+    transaction.feePayer = buyer.publicKey;
+    transaction.sign(buyer);
+    const signature = await connection.sendRawTransaction(transaction.serialize(), { preflightCommitment: 'confirmed' });
+    await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
+    return this.receipt(connection, signature, operation, pass ? amount_sol : 0, hash);
   }
   private async receipt(connection: Connection, signature: string, operation: Receipt['operation'], amount: number, hash?: string): Promise<Receipt> {
     const result = await connection.getSignatureStatuses([signature], { searchTransactionHistory: true });
@@ -101,6 +133,7 @@ export class Escrow implements EscrowService {
     const operation = pass ? 'release' : 'refund';
     const amount_sol = Math.round(task.payment_amount_sol * share * 1e9) / 1e9;
     return this.runtime.call<Receipt>('solana', operation, () => ({ operation, mocked: true, signature: `MOCK-${task.task_id}-${operation}-${slot}`, explorer_url: null, amount_sol, evidence_hash: hash }), async () => {
+      if (this.runtime.env.SOLANA_SETTLEMENT === 'transfer') return this.transferSettlement(task, slot, pass, hash, amount_sol);
       if (share !== 1) throw new ServiceUnavailable('solana', 'Partial settlement is not supported by the deployed escrow program');
       if (task.request.protected && pass && task.deliveries.filter(d => d.seller_id === task.slots[slot].seller_id).some(d => d.verification?.mocked)) throw new ServiceUnavailable('solana', 'Refusing live payout for mocked verification');
       const { connection, buyer, authority, program, pda, account } = await this.client(task);
