@@ -97,10 +97,10 @@ describe('payment decisions ignore our own retrieval limits', () => {
     const blocked = 'https://paywalled.example/story';
     const strict = { ...criteria, min_citations: 2 };
     const grounding = ground({ [blocked]: { reason: 'evidence: Source returned HTTP 403', status: 'unverifiable' } });
-    const value = submission([{ url: document.url, quote: document.text }, { url: blocked, quote: 'Unreachable passage.' }]);
+    const value = submission([{ url: blocked, quote: 'Unreachable passage.' }]);
     const result = await verify({ ...value, acceptance_criteria: strict }, services(grounding, false));
     const quota = result.failed_criteria.find(f => f.startsWith('min_citations'));
-    expect(quota).toContain('across 1 source(s)');
+    expect(quota).toContain('across 0 source(s)');
     expect(quota).toContain('could not be retrieved');
   });
 

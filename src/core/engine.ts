@@ -216,7 +216,10 @@ export class Engine {
           // cleared every one of them makes the payout probability decay with claim complexity, so
           // each sub-claim is settled on its own merits and the buyer keeps the unearned remainder.
           const units = Math.max(1, task.sub_claims.length);
-          const verified = deliveries.filter(d => d.verification?.resolver_verdict.final_pass).length;
+          // A submission earns the share of the evidence standard it met. Older records carry no
+          // credit field, so a pass there still counts whole.
+          const creditOf = (d: Delivery) => d.verification ? d.verification.credit ?? (d.verification.resolver_verdict.final_pass ? 1 : 0) : 0;
+          const verified = Math.round(deliveries.reduce((sum, d) => sum + creditOf(d), 0) * 1e6) / 1e6;
           const lamports = Math.round(task.payment_amount_sol * 1e9);
           const earned = task.request.protected ? Math.round(lamports * verified / units) : lamports;
           const released_sol = earned / 1e9, returned_sol = (lamports - earned) / 1e9;
@@ -234,12 +237,13 @@ export class Engine {
           task.refunded_sol = task.slots.reduce((sum, s) => sum + Math.round((s.returned_sol || 0) * 1e9), 0) / 1e9;
           task.locked_sol = task.slots.filter(s => s.state === 'pending').length * task.payment_amount_sol;
           for (const delivery of deliveries) if (delivery.dispute) { delivery.dispute.resolution = 'auto_refund'; delivery.dispute.evidence_hash = hash; }
-          const scope = units > 1 ? ` (${verified} of ${units} verifications)` : '';
+          const share = Number.isInteger(verified) ? String(verified) : verified.toFixed(2);
+          const scope = units > 1 ? ` (credit for ${share} of ${units} sub-claims)` : '';
           if (earned > 0) await this.event('payment.released', `SIMULATED RELEASE ${released_sol.toFixed(3)} SOL to ${slot.seller_id}${scope}.`, true);
           // Only a seller that earned nothing was blocked; otherwise the buyer is simply keeping the
           // part of the allocation that was never verified.
           if (earned < lamports) await this.event('payment.returned', earned > 0
-            ? `SIMULATED RETURN ${returned_sol.toFixed(3)} SOL to the buyer; ${slot.seller_id} did not verify ${units - verified} of ${units} sub-claim(s).`
+            ? `SIMULATED RETURN ${returned_sol.toFixed(3)} SOL to the buyer; ${slot.seller_id} delivered ${share} of ${units} sub-claim(s) in full.`
             : `PAYMENT BLOCKED · SIMULATED RETURN ${returned_sol.toFixed(3)} SOL for ${slot.seller_id}${scope}.`, true);
         }
         task.status = task.paid_sol > 0 ? 'paid' : 'refunded'; task.phase = 'complete'; task.completed_at = new Date().toISOString(); delete task.error;

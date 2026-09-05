@@ -35,7 +35,11 @@ export async function verify(input: BlindInput, services: VerificationServices):
   const unverifiable = grounding.citations.filter(c => c.status === 'unverifiable');
   const count = new Set(verified.map(c => canonical(c.url))).size;
   const skipped = [unverifiable.length ? `${unverifiable.length} source(s) could not be retrieved` : '', grounding.uncredited_citations?.length ? `${grounding.uncredited_citations.length} earned no credit` : ''].filter(Boolean).join(', ');
-  if (count < input.acceptance_criteria.min_citations) failures.push(`min_citations: required ${input.acceptance_criteria.min_citations} independent sources, verified ${verified.length} citation(s) across ${count} source(s)${skipped ? `; ${skipped}` : ''}`);
+  // Corroborating a claim with fewer independent sources than were commissioned is under-delivery,
+  // not failure: the buyer asked for a level of confidence and got some of it. The shortfall scales
+  // the fee below. Verifying nothing at all is still a failure.
+  const required = input.acceptance_criteria.min_citations;
+  if (count === 0) failures.push(`min_citations: required ${required} independent sources, verified ${verified.length} citation(s) across 0 source(s)${skipped ? `; ${skipped}` : ''}`);
   if (grounding.unsupported_claims.length) failures.push(...grounding.unsupported_claims.map(x => `citations_must_be_grounded: ${x}`));
   // Our own retrieval is direct evidence; a third-party index failing to find a source it does not
   // crawl is not. Only let the scan veto when something we could not independently ground is flagged.
@@ -52,7 +56,10 @@ export async function verify(input: BlindInput, services: VerificationServices):
   let decision = { final_pass: a.pass && b.pass, confidence: Math.min(a.score, b.score), reasoning: agreement ? 'Independent judges agree.' : '' };
   if (!agreement) decision = await services.span('resolver', () => services.tiebreak(input, [a, b], grounding.references));
   if (!decision.final_pass) failures.push(`judge_verdict: ${decision.reasoning || 'Independent review rejected the work'}`);
+  const passed = decision.final_pass && failures.length === 0;
+  const credit = passed ? Math.min(1, count / Math.max(1, required)) : 0;
   return {
+    credit, credited_sources: count, required_sources: required,
     judge_a: a, judge_b: b, agreement, grounding_check: grounding, hallucination_check: hallucination,
     resolver_verdict: { ...decision, final_pass: decision.final_pass && failures.length === 0, method: agreement ? 'consensus' : 'tiebreak', reasoning: failures.length ? `Payment blocked. ${failures.join('; ')}` : decision.reasoning },
     failed_criteria: failures, mocked: services.modelsMocked || grounding.mocked || hallucination.mocked,

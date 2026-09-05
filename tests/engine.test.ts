@@ -105,8 +105,17 @@ describe('pool and decomposition', () => {
   });
   it('pays only passing sellers and refunds all failed allocations', async () => {
     const task = await run('pool');
-    expect(task.slots).toHaveLength(4); expect(task.paid_sol).toBe(0.1); expect(task.refunded_sol).toBe(0.1);
-    expect(task.slots.map(s => s.state)).toEqual(['paid', 'refunded', 'refunded', 'paid']);
+    expect(task.slots).toHaveLength(4);
+    const [cedar, flint, moss, iris] = task.slots;
+    // The fabricator earns nothing. The sloppy seller verified the claim but with one source where
+    // three were commissioned, so it earns that share instead of losing the whole allocation.
+    expect(cedar.released_sol).toBe(0.05);
+    expect(flint.released_sol).toBe(0);
+    expect(moss.released_sol).toBeCloseTo(0.05 / 3, 6);
+    expect(iris.released_sol).toBe(0.05);
+    expect(task.slots.map(s => s.state)).toEqual(['paid', 'refunded', 'paid', 'paid']);
+    // Nothing is created or lost: every lamport is either released or returned.
+    expect(Math.round(task.paid_sol * 1e9) + Math.round(task.refunded_sol * 1e9)).toBe(Math.round(0.2 * 1e9));
     expect(task.sub_claims[0].reconciled_verdict).toBe('contested'); expect(task.sub_claims[0].resolution?.verdict).toBe('refuted');
   });
   it('decomposes, fans out, preserves a contested claim and resolves the parent', async () => {

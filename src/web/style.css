@@ -318,14 +318,13 @@ th { color: var(--text-tertiary); font-size: 8px; text-transform: uppercase; }
 .materials b { color: var(--primary); }
 .atomic-panel { overflow: hidden; }
 .atomic-panel details { border-bottom: 1px solid var(--border-subtle); }
-/* Flex, not grid: a grid column can be squeezed below its content when the row over-constrains,
-   which clipped the verdict badge mid-word. The badge cannot shrink and wraps to its own line
-   when the claim leaves no room for it. */
-.atomic-panel summary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-height: 52px; padding: 8px 12px; cursor: pointer; list-style: none; }
-.atomic-panel summary>span { flex: 0 0 auto; display: grid; place-items: center; width: 27px; height: 27px; border-radius: 50%; color: var(--danger); background: var(--danger-bg); font: 700 9px "SFMono-Regular", Consolas, monospace; }
-.atomic-panel summary strong { flex: 1 1 240px; min-width: 0; font-size: 10px; line-height: 1.45; overflow-wrap: anywhere; }
-.atomic-panel summary>.status-badge { flex: 0 0 auto; }
-.atomic-panel summary i { flex: 0 0 auto; margin-left: auto; color: var(--text-tertiary); }
+/* The badge sits on its own row rather than competing with the claim for width. Sharing a line
+   meant a long claim could squeeze it, and the panel's hidden overflow then cut it mid-word. */
+.atomic-panel summary { display: grid; grid-template-columns: 28px minmax(0, 1fr) 18px; grid-template-areas: "index claim chevron" ". verdict ."; align-items: center; gap: 6px 8px; min-height: 52px; padding: 10px 12px; cursor: pointer; list-style: none; }
+.atomic-panel summary>span { grid-area: index; display: grid; place-items: center; width: 27px; height: 27px; border-radius: 50%; color: var(--danger); background: var(--danger-bg); font: 700 9px "SFMono-Regular", Consolas, monospace; }
+.atomic-panel summary strong { grid-area: claim; min-width: 0; font-size: 10px; line-height: 1.45; overflow-wrap: anywhere; }
+.atomic-panel summary>.status-badge { grid-area: verdict; justify-self: start; max-width: 100%; }
+.atomic-panel summary i { grid-area: chevron; color: var(--text-tertiary); }
 .atomic-body { padding: 0 12px 12px; }
 .reason-box { margin-bottom: 12px; padding: 10px; border-radius: 7px; font-size: 9px; line-height: 1.55;  overflow-wrap: anywhere; }
 .reason-box.danger { color: #ab3540; background: var(--danger-bg); }

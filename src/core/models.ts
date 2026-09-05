@@ -72,6 +72,8 @@ export interface GroundingResult {
 export interface HallucinationResult { flagged: boolean; source: 'gptzero'; mocked: boolean; reasoning: string; scanned?: number; unreferenced?: number; }
 export interface VerificationResult {
   submission_id: string; judge_a: JudgeVerdict; judge_b: JudgeVerdict; agreement: boolean;
+  // Share of the commissioned evidence standard this submission actually delivered, 0 when it failed.
+  credit?: number; credited_sources?: number; required_sources?: number;
   grounding_check: GroundingResult; hallucination_check: HallucinationResult;
   resolver_verdict: { final_pass: boolean; method: 'consensus' | 'tiebreak'; confidence: number; reasoning: string };
   failed_criteria: string[]; mocked: boolean;

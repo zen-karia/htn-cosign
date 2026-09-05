@@ -39,14 +39,33 @@ describe('citations earn credit rather than acting as a veto', () => {
     expect(result.resolver_verdict.final_pass).toBe(true);
   });
 
-  it('still fails when too few citations earn credit', async () => {
+  it('pays a share when fewer sources earn credit than were asked for', async () => {
     const result = await verify(submission([
       { url: first.url, quote: first.text },
       { url: second.url, quote: 'A passage that appears on no page we retrieved at all.' },
     ]), services());
+    expect(result.resolver_verdict.final_pass).toBe(true);
+    expect(result.credited_sources).toBe(1);
+    expect(result.credit).toBe(0.5);
+  });
+
+  it('fails outright when no source earns credit', async () => {
+    const result = await verify(submission([
+      { url: first.url, quote: 'Nothing on this page says any such thing.' },
+      { url: second.url, quote: 'Nor does anything here.' },
+    ]), services());
     expect(result.resolver_verdict.final_pass).toBe(false);
+    expect(result.credit).toBe(0);
     expect(result.failed_criteria.some(f => f.startsWith('min_citations'))).toBe(true);
-    expect(result.failed_criteria.find(f => f.startsWith('min_citations'))).toContain('earned no credit');
+  });
+
+  it('never pays more than the whole fee for extra corroboration', async () => {
+    const result = await verify(submission([
+      { url: first.url, quote: first.text },
+      { url: second.url, quote: second.text },
+    ], 1), services());
+    expect(result.credited_sources).toBe(2);
+    expect(result.credit).toBe(1);
   });
 
   it('always charges an invented source to the seller', async () => {

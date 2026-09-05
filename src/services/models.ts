@@ -154,10 +154,11 @@ export class Models {
     // Both judges receive independently retrieved/indexed evidence, never seller identity.
     const view = references;
     return this.structured(`judge_${which}`, AgentJudge, system, { ...input, reference_documents: evidenceDocuments(view) }, this.runtime.env[`OPENAI_JUDGE_${which.toUpperCase()}_MODEL`] || (which === 'a' ? 'gpt-4.1-mini' : 'gpt-4.1'), () => {
-      const enough = new Set(input.submission.sources.map(s => s.url)).size >= input.acceptance_criteria.min_citations;
-      // Intentionally shallow mock judges demonstrate why independent grounding is a separate veto.
-      const pass = enough && input.acceptance_criteria.verdict_enum.includes(input.submission.verdict);
-      return { verdict: input.submission.verdict, confidence: pass ? 0.91 : 0.25, grounded: pass, unsupported_claims: pass ? [] : ['Insufficient distinct citations'], evidence_ids: view.map(d => d.id), reason: `[MOCKED] ${which === 'a' ? 'Structural rubric review' : 'Independent citation-count review'}; grounding remains a separate veto.` };
+      // Intentionally shallow mock judges demonstrate why independent grounding is a separate veto:
+      // they never look at whether the evidence supports the claim. They do not mirror the citation
+      // quota either, since a live judge never sees it and the quota now scales payment.
+      const pass = input.acceptance_criteria.verdict_enum.includes(input.submission.verdict);
+      return { verdict: input.submission.verdict, confidence: pass ? 0.91 : 0.25, grounded: pass, unsupported_claims: pass ? [] : ['Submitted verdict is not authorized'], evidence_ids: view.map(d => d.id), reason: `[MOCKED] ${which === 'a' ? 'Structural rubric review' : 'Independent evidence review'}; grounding remains a separate veto.` };
     }).then(review => {
       // The claim under verification is not an assertion of the submission. Listing it is what a
       // correct `refuted` finding looks like, so it must never count as a defect in the work.

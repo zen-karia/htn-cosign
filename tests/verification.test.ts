@@ -34,10 +34,14 @@ describe('payment gate', () => {
     expect(result.grounding_check.unsupported_claims.length).toBeGreaterThan(0);
     expect(result.grounding_check.citations.some(c => c.supports_verdict)).toBe(false);
   });
-  it('fails under-sourced work specifically on citation count', async () => {
+  it('pays under-sourced work a share rather than voiding it', async () => {
     const result = await verify(await input('sloppy'), services);
     expect(result.grounding_check.unsupported_claims).toEqual([]);
-    expect(result.failed_criteria.some(f => f.startsWith('min_citations'))).toBe(true);
+    // One source against a rubric asking for three: the claim was verified, the corroboration was not.
+    expect(result.credited_sources).toBe(1);
+    expect(result.required_sources).toBe(3);
+    expect(result.credit).toBeCloseTo(1 / 3);
+    expect(result.resolver_verdict.final_pass).toBe(true);
   });
   it('cannot override hallucination or grounding failures with a favorable tiebreak', async () => {
     const tie = vi.fn(async () => ({ final_pass: true, confidence: 1, reasoning: 'approve' }));
@@ -56,7 +60,10 @@ describe('payment gate', () => {
   });
   it('requires distinct citations', async () => {
     const value = await input('reliable'); value.submission.sources = Array(3).fill(value.submission.sources[0]);
-    expect((await verify(value, services)).failed_criteria.some(x => x.startsWith('min_citations'))).toBe(true);
+    const result = await verify(value, services);
+    // The same source three times is one source, so it earns a third of a three-source standard.
+    expect(result.credited_sources).toBe(1);
+    expect(result.credit).toBeCloseTo(1 / 3);
   });
   it('rejects a correct quote used to support the opposite conclusion', async () => {
     const value = await input('reliable'); value.submission.verdict = 'supported';

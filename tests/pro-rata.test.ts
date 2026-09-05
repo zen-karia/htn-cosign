@@ -14,6 +14,7 @@ async function settleWith(passes: boolean[], protectedRun = true) {
   mine.forEach((delivery, index) => {
     if (!delivery.verification || index >= passes.length) return;
     delivery.verification.resolver_verdict = { ...delivery.verification.resolver_verdict, final_pass: passes[index] };
+    delivery.verification.credit = passes[index] ? 1 : 0;
   });
   while (task.phase !== 'complete') await engine.step();
   return { task, slot: task.slots.find(s => s.seller_id === seller)!, units: task.sub_claims.length };
