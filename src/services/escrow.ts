@@ -48,6 +48,8 @@ const MEMO_PROGRAM = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'
 export class Escrow implements EscrowService {
   constructor(private runtime: Runtime) {}
   async connection() {
+    // api.devnet.solana.com answers workerd with 403 'Your IP or provider is blocked', so a Worker
+    // needs its own RPC endpoint. The default is kept for scripts, which run under Node and are served.
     const endpoint = this.runtime.env.SOLANA_RPC_URL || 'https://api.devnet.solana.com';
     if (new URL(endpoint).protocol !== 'https:') throw new ServiceUnavailable('solana', 'Devnet RPC must use HTTPS');
     const connection = new Connection(endpoint, { commitment: 'confirmed', confirmTransactionInitialTimeout: 60_000 });
