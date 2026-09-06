@@ -94,11 +94,13 @@ const worker = {
       if (url.pathname === '/api/config') {
         const required: Record<string, string[]> = { openai: ['OPENAI_API_KEY'], elasticsearch: ['ELASTICSEARCH_URL'], gptzero: ['GPTZERO_API_KEY'], sentry: ['SENTRY_DSN'] };
         const services = Object.fromEntries(['openai', 'gptzero', 'elasticsearch', 'solana', 'sentry'].map(s => [s, {
-          mocked: s === 'solana', optional: ['gptzero', 'sentry'].includes(s),
+          // Report what each service is actually set to. Settlement was hardcoded as mocked here,
+          // so a real devnet payout still described itself as simulated.
+          mocked: mockEnabled(settings(env), s), optional: ['gptzero', 'sentry'].includes(s),
           configured: s === 'solana' || (required[s] || []).every(key => typeof env[key] === 'string' && String(env[key]).length > 0),
         }]));
         const config = await env.CONFIG.get('demo', 'json');
-        return json({ mode: 'LIVE', settlement: 'SIMULATED', backend: 'Cloudflare Worker + per-task SQLite Durable Object', services, demo_claim: DEMO_CLAIM, complex_claim: COMPLEX_CLAIM, config, sentry_dsn: mockEnabled(settings(env), 'sentry') ? null : env.SENTRY_PUBLIC_DSN || env.SENTRY_DSN || null, sentry_org: env.SENTRY_ORG || null });
+        return json({ mode: 'LIVE', settlement: mockEnabled(settings(env), 'solana') ? 'SIMULATED' : 'DEVNET', backend: 'Cloudflare Worker + per-task SQLite Durable Object', services, demo_claim: DEMO_CLAIM, complex_claim: COMPLEX_CLAIM, config, sentry_dsn: mockEnabled(settings(env), 'sentry') ? null : env.SENTRY_PUBLIC_DSN || env.SENTRY_DSN || null, sentry_org: env.SENTRY_ORG || null });
       }
       if (url.pathname === '/api/tasks' && request.method === 'GET') return env.BOARD.get(env.BOARD.idFromName('board')).fetch('https://internal/board');
       if (url.pathname === '/api/tasks' && request.method === 'POST') {
