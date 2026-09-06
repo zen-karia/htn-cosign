@@ -78,17 +78,24 @@ export class Escrow implements EscrowService {
   // memo so the decision is still auditable on chain.
   private async transferSettlement(task: Task, slot: number, pass: boolean, hash: string, amount_sol: number): Promise<Receipt> {
     const operation = pass ? 'release' : 'refund';
-    const connection = await this.connection();
-    const buyer = this.key('SOLANA_BUYER_SECRET_KEY');
     const seller = task.slots[slot];
     const memo = `cosign ${operation} task=${task.task_id} slot=${slot} evidence=${hash}`;
-    const transaction = new Transaction();
+    let payment: { to: string; lamports: number } | undefined;
     if (pass) {
       if (!seller?.address || seller.address.startsWith('SIMULATED-')) throw new ServiceUnavailable('solana', 'Seller has no payable address configured');
       const lamports = Math.round(amount_sol * 1e9);
       if (lamports <= 0) throw new ServiceUnavailable('solana', 'Refusing a zero-value release');
-      transaction.add(SystemProgram.transfer({ fromPubkey: buyer.publicKey, toPubkey: new PublicKey(seller.address), lamports }));
+      payment = { to: seller.address, lamports };
     }
+    return this.memoReceipt(task, operation, memo, pass ? amount_sol : 0, hash, payment);
+  }
+
+  // One signed transaction carrying a memo, optionally moving lamports with it.
+  private async memoReceipt(task: Task, operation: Receipt['operation'], memo: string, amount_sol: number, hash?: string, payment?: { to: string; lamports: number }): Promise<Receipt> {
+    const connection = await this.connection();
+    const buyer = this.key('SOLANA_BUYER_SECRET_KEY');
+    const transaction = new Transaction();
+    if (payment) transaction.add(SystemProgram.transfer({ fromPubkey: buyer.publicKey, toPubkey: new PublicKey(payment.to), lamports: payment.lamports }));
     transaction.add({ keys: [], programId: MEMO_PROGRAM, data: Buffer.from(memo.slice(0, 560), 'utf8') });
     const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
     transaction.recentBlockhash = blockhash;
@@ -96,7 +103,7 @@ export class Escrow implements EscrowService {
     transaction.sign(buyer);
     const signature = await connection.sendRawTransaction(transaction.serialize(), { preflightCommitment: 'confirmed' });
     await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
-    return this.receipt(connection, signature, operation, pass ? amount_sol : 0, hash);
+    return this.receipt(connection, signature, operation, amount_sol, hash);
   }
   private async receipt(connection: Connection, signature: string, operation: Receipt['operation'], amount: number, hash?: string): Promise<Receipt> {
     const result = await connection.getSignatureStatuses([signature], { searchTransactionHistory: true });
@@ -114,6 +121,9 @@ export class Escrow implements EscrowService {
   }
   initialize(task: Task): Promise<Receipt> {
     return this.runtime.call<Receipt>('solana', 'initialize', () => ({ operation: 'initialize', mocked: true, signature: `MOCK-${task.task_id}-initialize`, explorer_url: null, amount_sol: task.payment_amount_sol * task.slots.length }), async () => {
+      // Transfer settlement has no escrow account to open, because the buyer keeps the funds until a
+      // payout. Opening one would call a program that is not deployed. Record the commitment instead.
+      if (this.runtime.env.SOLANA_SETTLEMENT === 'transfer') return this.memoReceipt(task, 'initialize', `cosign initialize task=${task.task_id} slots=${task.slots.length} per_seller_sol=${task.payment_amount_sol}`, task.payment_amount_sol * task.slots.length);
       const { connection, buyer, authority, program, hash, pda, account } = await this.client(task);
       const existing = await account.fetchNullable(pda);
       let signature: string;
