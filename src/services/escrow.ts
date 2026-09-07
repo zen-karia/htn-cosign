@@ -104,9 +104,24 @@ export class Escrow implements EscrowService {
     transaction.feePayer = buyer.publicKey;
     transaction.sign(buyer);
     const signature = await connection.sendRawTransaction(transaction.serialize(), { preflightCommitment: 'confirmed' });
-    await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
+    await this.awaitConfirmation(connection, signature);
     return this.receipt(connection, signature, operation, amount_sol, hash);
   }
+
+  // connection.confirmTransaction waits on a signature subscription, and a Worker has no outbound
+  // WebSocket, so the wait never resolves and the blockhash expires under a transaction that did in
+  // fact land. Poll the status over HTTP instead, which is the same question asked a different way.
+  private async awaitConfirmation(connection: Connection, signature: string, timeoutMs = 60_000) {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      const status = (await connection.getSignatureStatuses([signature], { searchTransactionHistory: true })).value[0];
+      if (status?.err) throw new ServiceUnavailable('solana', 'Transaction failed on chain');
+      if (status && ['confirmed', 'finalized'].includes(status.confirmationStatus || '')) return;
+      await new Promise(resolve => setTimeout(resolve, 1500));
+    }
+    throw new ServiceUnavailable('solana', 'Transaction was not confirmed in time; retry to reconcile on-chain state');
+  }
+
   private async receipt(connection: Connection, signature: string, operation: Receipt['operation'], amount: number, hash?: string): Promise<Receipt> {
     const result = await connection.getSignatureStatuses([signature], { searchTransactionHistory: true });
     const status = result.value[0];
