@@ -14,28 +14,10 @@ A live deployed run settles on devnet end to end: sellers research, sources are 
 
 ## Architecture
 
-```mermaid
-flowchart TD
-  UI[React dashboard] --> W[Cloudflare Worker API]
-  W --> DO[One SQLite Durable Object per task]
-  W --> KV[KV configuration]
-  DO --> BUYER[Buyer decomposes claims]
-  BUYER --> POOL[2–4 independent web-search sellers]
-  POOL --> FETCH[Retrieve, extract, hash and index cited URLs]
-  FETCH --> BLIND[Strip attribution and shuffle evaluation order]
-  BLIND --> ES[Elasticsearch: BM25 + vectors + ES|QL]
-  BLIND --> GZ[GPTZero hallucination gate]
-  ES --> A[Judge A: factual review]
-  ES --> B[Judge B: adversarial review]
-  A --> R[Consensus / structured tiebreak]
-  B --> R
-  GZ --> R
-  R --> PASS[All hard gates pass]
-  R --> FAIL[Failed criteria + dispute evidence]
-  PASS --> RELEASE[Devnet transfer to the seller]
-  FAIL --> REFUND[Return retained by the buyer]
-  DO -. task trace .-> SENTRY[Sentry spans + frontend Session Replay]
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.png">
+  <img src="docs/architecture-light.png" alt="Cosign architecture. A React dashboard calls a Cloudflare Worker, which gives every task its own SQLite Durable Object running an alarm-driven phase machine: classify, initialize, decompose, sellers, verify, reconcile, settle, complete. The task staffs a panel of independent research agents on different models with different research strategies, then a server-side evidence pipeline retrieves, grounds and blinds everything they cite, sorting each citation into grounded, contradicted, nonexistent or unverifiable. Elasticsearch, two blind judges, a resolver and a GPTZero bibliography scan feed a payment gate that releases lamports to the seller or returns them to the buyer, settling on Solana devnet with the verification hash in the transaction memo. Sentry traces the whole run.">
+</picture>
 
 The Worker is the backend, not a static simulation. Each task durably stores its phase, deliveries, reviews, disputes and receipts. Alarms resume work and retry unavailable services three times before pausing safely. The board has another Durable Object; KV supplies optional demo configuration.
 
@@ -57,7 +39,7 @@ npm run dev
 
 Open **http://127.0.0.1:8787**. For frontend hot reload, keep the Worker running and run `npm run dev:ui`; use the Vite URL it prints.
 
-Setup creates ignored `.env` and `.dev.vars`. Demo Replay needs no credentials. The main Verification Desk requires `OPENAI_API_KEY`, `ELASTICSEARCH_URL`, and an accessible Elastic service; GPTZero and Sentry are optional integrations. After editing `.env`, run `npm run setup` and **restart the Worker**. Live tasks pin OpenAI, source retrieval, and Elastic to live execution and pin settlement to simulation, so they never silently fall back to fixtures or claim a chain transaction.
+Setup creates ignored `.env` and `.dev.vars`. Demo Replay needs no credentials. The main Verification Desk requires `OPENAI_API_KEY`, `ELASTICSEARCH_URL`, and an accessible Elastic service; GPTZero and Sentry are optional integrations. After editing `.env`, run `npm run setup` and **restart the Worker**. Live tasks pin OpenAI, source retrieval, and Elastic to live execution, so they never silently fall back to fixtures. Settlement follows the environment: with `SOLANA_SETTLEMENT=transfer`, a funded `SOLANA_BUYER_SECRET_KEY` and `SOLANA_SELLER_ADDRESSES`, every slot settles in a real devnet transaction; without them it stays simulated and labels itself as such.
 
 `npm run verify:clean` copies the source to a fresh ignored directory without dependencies, credentials, keys or Worker state and literally runs the setup/test/build/demo commands above. No commit or remote push is needed. Results go to `artifacts/clean-verification.json`.
 
