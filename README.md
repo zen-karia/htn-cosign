@@ -8,9 +8,9 @@ Payment rails such as x402 authorize and settle payments before establishing whe
 
 ## Current evidence
 
-The local application uses a real Cloudflare Worker and SQLite Durable Objects through Wrangler. The main desk now creates explicit `live` tasks: it classifies verifiability, launches 2–4 independent Responses API sellers with web search, retrieves their URLs server-side, hashes and indexes extracted text in a run-scoped Elastic index, runs two fresh blind judges per submission, reconciles conflicts, settles each seller slot on devnet from the actual results, and persists the full run.
+The local application uses a real Cloudflare Worker and SQLite Durable Objects through Wrangler. The main desk now creates explicit `live` tasks: it classifies verifiability, launches 2–4 Responses API sellers with web search, each on a different model with its own research strategy and search budget (see `src/core/agents.ts`; they remain one provider, so this is strategy diversity rather than model-family independence), retrieves their URLs server-side, hashes and indexes extracted text in a run-scoped Elastic index, runs two fresh blind judges per submission, reconciles conflicts, settles each seller slot on devnet from the actual results, and persists the full run.
 
-A live unseen-claim rehearsal completed and reopened as run `3da29332-fd5f-4fbd-a67f-e8c403b20bb5`: four seller searches, source retrieval, live embeddings/Elastic queries, four entailment checks, four GPTZero scans, eight judge calls, and dynamic claim reconciliation all executed. Deterministic evidence gates rejected the unsupported/incorrect submissions, so the result was a simulated full return. Demo Replay remains the only fixture-backed UI mode. [PROGRESS.md](PROGRESS.md) records details.
+A live deployed run settles on devnet end to end: sellers research, sources are retrieved and indexed, judges review blind, and each slot is paid or returned in its own transaction carrying the verification evidence hash. Two findings from live running are worth stating plainly. Both judges have approved a submission built on a source that does not exist — `home.cern/energy/energy/`, invented by the seller and returning 404 — which the grounding gate rejected; that is the case the deterministic checks exist for. And a seller lens that asks for counter-evidence drove one model to cite plausible URLs recalled from training rather than pages it opened, which is why citations are now checked against the search tool's own record of what was read. Demo Replay remains the only fixture-backed UI mode. [PROGRESS.md](PROGRESS.md) records details.
 
 ## Architecture
 
@@ -115,7 +115,7 @@ Replay tooling can still use a seeded index. Live Verification Desk tasks instea
 ## Live Verification Desk setup
 
 1. Add `OPENAI_API_KEY`, `ELASTICSEARCH_URL`, and (when needed) `ELASTICSEARCH_API_KEY` to `.env`, then run `npm run setup` and `npm run doctor`.
-2. **GPTZero Bibliography Scan** is wired to `POST https://api.gptzero.me/v2/bibliography-scan/text`, posting `{document}` and reading `bibliographic_citations[].citation_exists.status`. Verified live: fictional citations return `fake` and are flagged; real public sources return clean. AI-authorship `/predict/text` is not a hallucination signal and is never used. A scan web-searches each citation and takes about a minute. **It requires real, publicly findable sources** — against the fictional demo corpus every citation is correctly judged `fake`, so no allocation would ever be paid. Swap the corpus before enabling this gate.
+2. **GPTZero Bibliography Scan** is wired to `POST https://api.gptzero.me/v2/bibliography-scan/text`, posting `{document}` and reading `bibliographic_citations[].citation_exists.status` and `claim_reference.has_reference`. The second is the one signal no other check produces: grounding only validates the citations a submission offers, so nothing else notices a bibliography that backs no claim in the prose. A submission whose every cited source is unreferenced fails; a partially unreferenced one is reported, not penalised. Verified live: fictional citations return `fake` and are flagged; real public sources return clean. AI-authorship `/predict/text` is not a hallucination signal and is never used. A scan web-searches each citation and takes about a minute. **It requires real, publicly findable sources** — against the fictional demo corpus every citation is correctly judged `fake`, so no allocation would ever be paid. Swap the corpus before enabling this gate.
 3. Restart the Worker and submit any concrete, current-or-historical fact from Verification Desk. The Worker creates the run-scoped index automatically; the fixture seed is not used.
 4. Optional: configure Sentry and run `npm run test:sentry`.
 5. To settle on devnet, set `MOCK_MODE_SOLANA=false`, `SOLANA_SETTLEMENT=transfer`, fund `.keys/buyer.json`, and point `SOLANA_RPC_URL` at an endpoint a Worker can reach. The public `api.devnet.solana.com` serves Node but answers workerd with `403 Your IP or provider is blocked`. Settlement stays simulated when the flag is unset, and a task keeps the mode it was created with.
@@ -151,10 +151,13 @@ Deployment requires `.tools/solana-release/bin/solana`, `.keys/program.json` and
 | Durable orchestration | `src/worker/`, `src/core/engine.ts` |
 | Blind verification | `src/core/blind.ts`, `src/core/verify.ts` |
 | Sponsor clients | `src/services/` |
+| Research panel | `src/core/agents.ts` |
+| Failure wording | `src/core/criteria.ts` |
 | Harness-only labels | `src/harness/sellers.ts` |
 | Anchor escrow | `programs/cosign-escrow/` |
 | Dashboard | `src/web/` |
 | Tests | `tests/`, `scripts/e2e.ts` |
+| Diagnostics | `scripts/settlement-smoke.ts`, `scripts/agent-probe.ts` |
 | Durable memory | `PROGRESS.md`, `ASSUMPTIONS.md`, `TODO.md` |
 
 Build runs TypeScript, Vite and a Cloudflare **dry run**, without publishing. HTTP end-to-end tests use actual Wrangler and SQLite Durable Objects.
