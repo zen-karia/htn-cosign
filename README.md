@@ -2,13 +2,13 @@
 
 **Agents paying other agents to verify whether agents are lying — and nobody gets paid until two independent judges cosign the work.**
 
-Cosign is a verify-then-settle layer for agent-to-agent commerce, demonstrated through fact-checking. In this release the Verification Desk performs live research and verification, then calculates a clearly labeled simulated SOL settlement. It does not submit a blockchain transaction.
+Cosign is a verify-then-settle layer for agent-to-agent commerce, demonstrated through fact-checking. The Verification Desk performs live research and verification, then settles on Solana devnet: a release transfers lamports to the seller and a refusal moves nothing, each carrying the hash of the verification that authorised it in a transaction memo. The Anchor escrow program in `programs/cosign-escrow/` is written but not deployed, so the chain records the decision rather than enforcing it.
 
 Payment rails such as x402 authorize and settle payments before establishing whether delivered work is correct or in scope. They leave a gap for “the payment was valid, but the work was wrong.” Cosign closes that gap with a machine-checkable rubric, independent reviews grounded in indexed documents, and structured dispute evidence. Verification and conflict resolution are the product; there is no bidding, discovery, or reputation system.
 
 ## Current evidence
 
-The local application uses a real Cloudflare Worker and SQLite Durable Objects through Wrangler. The main desk now creates explicit `live` tasks: it classifies verifiability, launches 2–4 independent Responses API sellers with web search, retrieves their URLs server-side, hashes and indexes extracted text in a run-scoped Elastic index, runs two fresh blind judges per submission, reconciles conflicts, calculates simulated settlement from actual results, and persists the full run.
+The local application uses a real Cloudflare Worker and SQLite Durable Objects through Wrangler. The main desk now creates explicit `live` tasks: it classifies verifiability, launches 2–4 independent Responses API sellers with web search, retrieves their URLs server-side, hashes and indexes extracted text in a run-scoped Elastic index, runs two fresh blind judges per submission, reconciles conflicts, settles each seller slot on devnet from the actual results, and persists the full run.
 
 A live unseen-claim rehearsal completed and reopened as run `3da29332-fd5f-4fbd-a67f-e8c403b20bb5`: four seller searches, source retrieval, live embeddings/Elastic queries, four entailment checks, four GPTZero scans, eight judge calls, and dynamic claim reconciliation all executed. Deterministic evidence gates rejected the unsupported/incorrect submissions, so the result was a simulated full return. Demo Replay remains the only fixture-backed UI mode. [PROGRESS.md](PROGRESS.md) records details.
 
@@ -32,8 +32,8 @@ flowchart TD
   GZ --> R
   R --> PASS[All hard gates pass]
   R --> FAIL[Failed criteria + dispute evidence]
-  PASS --> RELEASE[Simulated releasable allocation]
-  FAIL --> REFUND[Simulated protected return]
+  PASS --> RELEASE[Devnet transfer to the seller]
+  FAIL --> REFUND[Return retained by the buyer]
   DO -. task trace .-> SENTRY[Sentry spans + frontend Session Replay]
 ```
 
@@ -81,12 +81,12 @@ The default claim says fictional Meridian electric ferries reduced operating emi
 
 - Judge A reconstructs facts and Judge B performs an adversarial evidence audit. Both are fresh independent calls over anonymized work and independently retrieved/indexed evidence. Each returns a factual verdict, confidence, grounding state, unsupported claims, evidence IDs and reason. The server derives pass/fail from that verdict, preventing contradictory prose/boolean outputs from authorizing settlement. They still use the same provider; this is not model-family independence.
 - Verification receives only claim, rubric, verdict, reasoning and canonicalized citations. Known IDs and harness labels are scrubbed. Extra metadata is rejected, order randomized, and every verification dependency checked by blindness tests. Writing style itself cannot be guaranteed anonymous.
-- Grounding checks indexed source existence and verbatim quotation presence, then calls passage entailment to evaluate the submitted verdict. Answer annotations are never used or sent to models. Entailment uses `OPENAI_ENTAILMENT_MODEL` (falling back to the resolver model); its explanation and mock/live flag are exported per citation. BM25 and vector rankings are fused with RRF; parameterized ES|QL retrieves cited documents. Similarity alone never authorizes payment.
-- Duplicate citations cannot satisfy the minimum; a real quote used for the opposite conclusion fails. Consensus/tiebreaks cannot override rubric, grounding or hallucination failures.
-- Sellers/judges run concurrently. Four blind submissions per alarm bound external requests. Simulated allocations are calculated sequentially and produce deterministic evidence commitments.
+- Grounding checks indexed source existence, then scores the quote by ordered three-word-sequence containment against the independently retrieved page, then calls passage entailment to evaluate the submitted verdict. Exact containment was too brittle: two independent extractions of one page rarely agree byte for byte, so honest citations failed while fabricated text still scores near zero. Each citation is classified grounded, contradicted, nonexistent or unverifiable, and a source the retrieval could not read is never charged to the seller. Answer annotations are never used or sent to models. Entailment uses `OPENAI_ENTAILMENT_MODEL` (falling back to the resolver model); its explanation and mock/live flag are exported per citation. BM25 and vector rankings are fused with RRF; parameterized ES|QL retrieves cited documents. Similarity alone never authorizes payment.
+- There is no citation quota. Corroboration comes from the panel: four sellers with different models, research strategies and search budgets verify the same claim independently, which carries more information than one seller citing several pages. A submission needs one source that holds up; a citation that does not exist still fails it outright. Citations are also checked against the pages the seller actually opened, as reported by the search tool, because a model can emit a URL that fits a site's pattern rather than one it read. Consensus/tiebreaks cannot override rubric, grounding or hallucination failures.
+- Sellers/judges run concurrently. Four blind submissions per alarm bound external requests. Settlements are sequential and produce deterministic evidence commitments.
 - Outages set `stalled`, keep funds locked, and remain retryable. Invalid/refused/incomplete entailment responses also stall rather than substituting approval. Wrong work creates a structured dispute and refund.
 - Conflicts remain `contested`, with a separate document-based resolution. Unknown assertions fail closed. False conjuncts refute the parent; unresolved conflicts stay contested.
-- `payment_amount_sol` is **per seller** and is a simulation input in the current Verification Desk. A seller must pass every atomic claim. Evidence-derived release/return amounts and deterministic commitments are persisted, but no funds move and no Explorer link is invented.
+- `payment_amount_sol` is **per seller**. A decomposed task settles per sub-claim rather than all or nothing: paying only a seller that cleared every one of them made the payout probability fall as claims got more complex, which is the work worth commissioning. A seller that verified two of three sub-claims earns two thirds and the buyer keeps the rest. Amounts, evidence commitments and the transaction signature are persisted, and an Explorer link is only present when a transaction exists.
 
 Behavior fixtures live only in `src/harness/sellers.ts` and are used by Demo Replay/test tooling. Main-desk sellers always perform fresh independent web research. The Fabricator Test is runtime-generated with a skeptical/cherry-picking policy that is forbidden from inventing sources, URLs, quotations, or facts; judges never see that designation.
 
@@ -117,11 +117,12 @@ Replay tooling can still use a seeded index. Live Verification Desk tasks instea
 1. Add `OPENAI_API_KEY`, `ELASTICSEARCH_URL`, and (when needed) `ELASTICSEARCH_API_KEY` to `.env`, then run `npm run setup` and `npm run doctor`.
 2. **GPTZero Bibliography Scan** is wired to `POST https://api.gptzero.me/v2/bibliography-scan/text`, posting `{document}` and reading `bibliographic_citations[].citation_exists.status`. Verified live: fictional citations return `fake` and are flagged; real public sources return clean. AI-authorship `/predict/text` is not a hallucination signal and is never used. A scan web-searches each citation and takes about a minute. **It requires real, publicly findable sources** — against the fictional demo corpus every citation is correctly judged `fake`, so no allocation would ever be paid. Swap the corpus before enabling this gate.
 3. Restart the Worker and submit any concrete, current-or-historical fact from Verification Desk. The Worker creates the run-scoped index automatically; the fixture seed is not used.
-4. Optional: configure Sentry and run `npm run test:sentry`. Settlement remains simulated by design for this release.
+4. Optional: configure Sentry and run `npm run test:sentry`.
+5. To settle on devnet, set `MOCK_MODE_SOLANA=false`, `SOLANA_SETTLEMENT=transfer`, fund `.keys/buyer.json`, and point `SOLANA_RPC_URL` at an endpoint a Worker can reach. The public `api.devnet.solana.com` serves Node but answers workerd with `403 Your IP or provider is blocked`. Settlement stays simulated when the flag is unset, and a task keeps the mode it was created with.
 
 Sentry wraps the Worker/DOs. A persisted trace ID connects alarm-stage transactions with spans through submission, grounding, GPTZero, judges, resolution and settlement. Frontend Session Replay starts with a configured DSN and masks text. A DSN/trace link is not ingestion proof; final live checks must open real traces.
 
-Baseten/Browserbase are optional, independently flagged, and **not implemented or claimed**. No Cloudflare production/public deployment runs by default. Dev-tunnel mutations need `API_TOKEN`; cross-origin mutations are rejected. This is not a production authentication system.
+Baseten/Browserbase are optional, independently flagged, and **not implemented or claimed**. A public deployment runs at `https://cosign.zenilkaria2006.workers.dev`. Dev-tunnel mutations need `API_TOKEN`; cross-origin mutations are rejected. This is not a production authentication system.
 
 ## Anchor / Solana
 
