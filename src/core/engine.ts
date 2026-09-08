@@ -11,6 +11,10 @@ import { Hallucination } from '../services/hallucination';
 import { Escrow, digest, type EscrowService } from '../services/escrow';
 import { EvidenceRetriever, canonicalUrl } from '../services/evidence';
 
+// Matches the four-per-alarm bound the verify phase uses, for the same reason: it keeps
+// external subrequests per alarm within the Worker's limit.
+const SELLER_BATCH = 4;
+
 export type Save = (task: Task) => Promise<void>;
 export type Span = <T>(name: string, action: () => Promise<T>) => Promise<T>;
 const shuffled = <T>(items: T[]) => {
@@ -82,6 +86,13 @@ export class Engine {
     if (task.status === 'stalled') task.status = ['classify', 'initialize', 'decompose', 'sellers'].includes(task.phase) ? 'posted' : task.phase === 'verify' ? 'verifying' : 'submitted';
     switch (task.phase) {
       case 'classify': {
+        // A document mixes fact, opinion and forecast, so one verifiability verdict over the
+        // whole text would be meaningless. An audit classifies each extracted assertion instead.
+        if (task.task_type === 'document_audit') {
+          task.phase = 'initialize';
+          await this.event('document.received', `Document accepted for audit: ${task.claim.length} characters.`);
+          break;
+        }
         task.verifiability = await this.span('buyer.classify', () => this.models.classify(task.claim));
         if (task.verifiability.classification !== 'VERIFIABLE') {
           task.phase = 'complete'; task.status = 'refunded'; task.completed_at = new Date().toISOString();
@@ -100,20 +111,40 @@ export class Engine {
         break;
       }
       case 'decompose': {
-        const claims = task.request.decompose ? (await this.span('buyer.decompose', () => this.models.decompose(task.claim))).claims : [task.claim];
+        let claims: string[];
+        if (task.task_type === 'document_audit') {
+          const { assertions } = await this.span('buyer.extract', () => this.models.extractAssertions(task.claim));
+          task.audit = { assertions };
+          claims = assertions.filter(a => a.kind === 'VERIFIABLE').map(a => a.text);
+          if (!claims.length) {
+            task.phase = 'complete'; task.status = 'refunded'; task.completed_at = new Date().toISOString();
+            await this.event('run.rejected', `No checkable assertion found: all ${assertions.length} statement(s) are opinion, forecast, or too under-specified to research.`);
+            break;
+          }
+          await this.event('document.extracted', `${assertions.length} assertion(s) extracted from the document: ${claims.length} checkable, ${assertions.length - claims.length} not researchable (opinion, forecast or under-specified).`, this.runtime.mocked('openai'));
+        } else {
+          claims = task.request.decompose ? (await this.span('buyer.decompose', () => this.models.decompose(task.claim))).claims : [task.claim];
+        }
         task.sub_claims = claims.map(text => ({ sub_claim_id: crypto.randomUUID(), parent_task_id: task.task_id, text, assigned_seller_ids: task.slots.map(s => s.seller_id), verdicts: [], reconciled_verdict: 'insufficient_evidence' }));
         task.phase = 'sellers';
         await this.event('claims.decomposed', `${claims.length} atomic claim(s) assigned to ${task.slots.length} concurrent seller(s).`, task.request.decompose && this.runtime.mocked('openai'));
         break;
       }
       case 'sellers': {
-        if (task.request.execution_mode === 'live') {
+        // Announced once, not again on each batch re-entry of a document audit.
+        if (task.request.execution_mode === 'live' && !task.deliveries.length) {
           for (const slot of task.slots) task.activity.push({ id: task.activity.length + 1, at: new Date().toISOString(), stage: 'seller.started', message: `${slot.seller_id} began independent web research.`, mocked: false });
           await this.save(task);
         }
         const references = task.request.execution_mode === 'live' ? task.sub_claims.map(() => [] as Awaited<ReturnType<Grounding['search']>>) : await Promise.all(task.sub_claims.map(s => this.ground.search(s.text)));
-        const attempts = await Promise.allSettled(task.sub_claims.flatMap((sub, index) => task.slots.map(async (slot, sellerIndex) => {
-          if (task.deliveries.some(d => d.sub_claim_id === sub.sub_claim_id && d.seller_id === slot.seller_id)) return;
+        // Research is one slot against one sub-claim. A claim run fans out to at most 4 x 4, but a
+        // document audit multiplies sellers by however many assertions the document made, which is
+        // more concurrent web research than one alarm should attempt. Bound it the way verify is
+        // bounded and re-enter; other task types keep running in a single pass as before.
+        const pending = task.sub_claims.flatMap((sub, index) => task.slots.map((slot, sellerIndex) => ({ sub, index, slot, sellerIndex })))
+          .filter(({ sub, slot }) => !task.deliveries.some(d => d.sub_claim_id === sub.sub_claim_id && d.seller_id === slot.seller_id));
+        const batch = task.task_type === 'document_audit' ? pending.slice(0, SELLER_BATCH) : pending;
+        const attempts = await Promise.allSettled(batch.map(async ({ sub, index, slot, sellerIndex }) => {
           const profile = profiles.find(p => p.seller_id === slot.seller_id);
           const adversarial = task.request.execution_mode === 'live' && task.request.scenario === 'fabricator' && sellerIndex === 0;
           // Each slot gets a different model, research strategy and search budget; see core/agents.ts.
@@ -141,13 +172,17 @@ export class Engine {
               else task.evidence_documents!.push({ ...doc, seller_references: [delivery.submission_id] });
             }
           }
-        })));
+        }));
         attempts.forEach((result, attemptIndex) => {
           if (result.status === 'rejected') {
-            const slot = task.slots[attemptIndex % task.slots.length]; slot.error = 'Seller research failed; its simulated allocation remains protected.';
+            const slot = batch[attemptIndex].slot; slot.error = 'Seller research failed; its simulated allocation remains protected.';
             task.activity.push({ id: task.activity.length + 1, at: new Date().toISOString(), stage: 'seller.failed', message: `${slot.seller_id} did not return a valid research submission.`, mocked: false });
           }
         });
+        if (pending.length > batch.length) {
+          await this.event('research.batch', `${task.deliveries.length} of ${task.sub_claims.length * task.slots.length} assertion/seller pairs researched; continuing.`, false);
+          await this.save(task); break;
+        }
         if (task.request.execution_mode === 'live') {
           if (task.deliveries.length < 2) throw new Error('Fewer than two seller agents completed research.');
           await this.ground.indexDocuments(task.evidence_documents!);

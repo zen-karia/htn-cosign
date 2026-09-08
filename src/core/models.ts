@@ -35,9 +35,22 @@ export type JudgeVerdict = z.infer<typeof JudgeVerdict>;
 export const TieVerdict = z.object({ final_pass: z.boolean(), confidence: z.number().min(0).max(1), reasoning: z.string().min(1).max(6000) }).strict();
 export const Reconciliation = z.object({ verdict: Verdict, confidence: z.number().min(0).max(1), reasoning: z.string().min(1).max(6000) }).strict();
 export const Decomposition = z.object({ claims: z.array(z.string().min(10).max(1500)).min(1).max(4) }).strict();
+export const AssertionKind = z.enum(['VERIFIABLE', 'SUBJECTIVE', 'FUTURE_PREDICTION', 'INSUFFICIENTLY_SPECIFIED']);
+export type AssertionKind = z.infer<typeof AssertionKind>;
+// Extraction over a pasted document. Unlike Decomposition this keeps every assertion it
+// finds, including the ones it will not research: a document's unfalsifiable and
+// forward-looking claims are the audit's finding, not noise to discard.
+export const AuditExtraction = z.object({
+  assertions: z.array(z.object({
+    text: z.string().min(10).max(1500),
+    kind: AssertionKind,
+    reason: z.string().min(1).max(400),
+  }).strict()).min(1).max(12),
+}).strict();
+export type ExtractedAssertion = z.infer<typeof AuditExtraction>['assertions'][number];
 export const TaskRequest = z.object({
-  claim: z.string().trim().min(10).max(4000),
-  task_type: z.enum(['claim_verification', 'source_audit', 'citation_check']).default('claim_verification'),
+  claim: z.string().trim().min(10).max(20000),
+  task_type: z.enum(['claim_verification', 'source_audit', 'citation_check', 'document_audit']).default('claim_verification'),
   payment_amount_sol: z.number().min(0.001).max(0.1).default(0.05).refine(x => Math.abs(x * 1e9 - Math.round(x * 1e9)) < 0.001, 'Use whole lamports'),
   acceptance_criteria: Rubric.default({}),
   scenario: z.enum(['pool', 'reliable', 'fabricator', 'sloppy', 'uninstructed']).default('pool'),
@@ -100,6 +113,9 @@ export interface Task {
   evidence_documents?: ReferenceDocument[];
   retrieval_failures?: Record<string, RetrievalFailure>;
   verifiability?: { classification: 'VERIFIABLE' | 'SUBJECTIVE' | 'FUTURE_PREDICTION' | 'INSUFFICIENTLY_SPECIFIED'; reason: string };
+  // Present only for document_audit: every assertion found in the source document, including
+  // those never researched. sub_claims holds the researchable subset.
+  audit?: { assertions: ExtractedAssertion[] };
 }
 export type Settings = Record<string, string | undefined>;
 // text-embedding-3-small natively produces 1536 dims. The earlier hard-coded 64

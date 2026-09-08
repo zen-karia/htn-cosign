@@ -1,4 +1,5 @@
 import { DurableObject } from 'cloudflare:workers';
+import { pdfText } from '../services/evidence';
 import * as Sentry from '@sentry/cloudflare';
 import { z } from 'zod';
 import { createTask, Engine } from '../core/engine';
@@ -103,6 +104,18 @@ const worker = {
         return json({ mode: 'LIVE', settlement: mockEnabled(settings(env), 'solana') ? 'SIMULATED' : 'DEVNET', backend: 'Cloudflare Worker + per-task SQLite Durable Object', services, demo_claim: DEMO_CLAIM, complex_claim: COMPLEX_CLAIM, config, sentry_dsn: mockEnabled(settings(env), 'sentry') ? null : env.SENTRY_PUBLIC_DSN || env.SENTRY_DSN || null, sentry_org: env.SENTRY_ORG || null });
       }
       if (url.pathname === '/api/tasks' && request.method === 'GET') return env.BOARD.get(env.BOARD.idFromName('board')).fetch('https://internal/board');
+      // A dropped PDF is turned into text here rather than in the browser: unpdf already runs
+      // inside workerd for source retrieval, so the bundle stays free of a second pdf.js copy.
+      if (url.pathname === '/api/extract' && request.method === 'POST') {
+        const bytes = new Uint8Array(await request.arrayBuffer());
+        if (!bytes.length) return json({ error: 'Empty upload' }, 400);
+        if (bytes.length > 8_000_000) return json({ error: 'File larger than 8 MB' }, 413);
+        try {
+          const text = await pdfText(bytes);
+          if (!text) return json({ error: 'No selectable text found. A scanned PDF needs OCR first.' }, 422);
+          return json({ text });
+        } catch { return json({ error: 'Could not read that PDF.' }, 422); }
+      }
       if (url.pathname === '/api/tasks' && request.method === 'POST') {
         if (Number(request.headers.get('content-length') || 0) > 24000) return json({ error: 'Request too large' }, 413);
         const body = await request.text(); if (body.length > 24000) return json({ error: 'Request too large' }, 413);

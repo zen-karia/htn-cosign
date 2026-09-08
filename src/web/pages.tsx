@@ -94,9 +94,70 @@ function SettlementCard({ task }: { task?: Task }) {
   </Card>;
 }
 
-export function DeskPage({ config, task, posting, claim, decompose, onClaim, onDecompose, onStart, onNavigate, onInspect, replaying }: {
-  config?: Config; task?: Task; posting: boolean; claim: string; decompose: boolean;
-  onClaim: (value: string) => void; onDecompose: (value: boolean) => void;
+const TEXT_TYPES = ['.txt', '.md', '.markdown', '.csv', '.json', '.html', '.htm'];
+
+// A PDF goes to the Worker, which already runs unpdf for source retrieval. Everything else is
+// read in the browser. Either way the text lands in the same box, so it stays editable.
+export function DropZone({ onText, busy, onBusy, onError }: { onText: (value: string) => void; busy: boolean; onBusy: (value: boolean) => void; onError: (value: string) => void }) {
+  const [over, setOver] = useState(false);
+  const accept = async (file?: File) => {
+    if (!file) return;
+    onError(''); onBusy(true);
+    try {
+      const name = file.name.toLowerCase();
+      if (name.endsWith('.pdf')) {
+        const response = await fetch('/api/extract', { method: 'POST', body: file });
+        const body = await response.json() as { text?: string; error?: string };
+        if (!response.ok || !body.text) throw new Error(body.error || 'Could not read that PDF.');
+        onText(body.text);
+      } else if (TEXT_TYPES.some(ext => name.endsWith(ext)) || file.type.startsWith('text/')) {
+        onText((await file.text()).replace(/\s+\n/g, '\n').trim());
+      } else {
+        throw new Error(`${file.name.split('.').pop()?.toUpperCase() || 'That file type'} is not supported. Use PDF, TXT, MD, CSV, JSON or HTML.`);
+      }
+    } catch (reason) { onError(reason instanceof Error ? reason.message : 'Could not read that file.'); }
+    finally { onBusy(false); }
+  };
+  return <label
+    className={`drop-zone${over ? ' over' : ''}${busy ? ' busy' : ''}`}
+    onDragOver={event => { event.preventDefault(); setOver(true); }}
+    onDragLeave={() => setOver(false)}
+    onDrop={event => { event.preventDefault(); setOver(false); void accept(event.dataTransfer.files?.[0]); }}
+  >
+    <input type="file" accept=".pdf,.txt,.md,.markdown,.csv,.json,.html,.htm,text/*,application/pdf" onChange={event => { void accept(event.target.files?.[0] ?? undefined); event.target.value = ''; }}/>
+    <span aria-hidden="true">{busy ? '\u25CC' : '\u2913'}</span>
+    <b>{busy ? 'Reading document\u2026' : over ? 'Drop to load' : 'Drop a document, or click to choose'}</b>
+    <small>PDF, TXT, MD, CSV, JSON or HTML · up to 8 MB</small>
+  </label>;
+}
+
+const KIND_LABEL: Record<string, string> = { SUBJECTIVE: 'Opinion', FUTURE_PREDICTION: 'Forecast', INSUFFICIENTLY_SPECIFIED: 'Too vague' };
+
+// What a document asserts without being checkable is the audit's finding, so the
+// unresearched assertions are listed beside the researched ones rather than hidden.
+export function AuditPanel({ task }: { task: Task }) {
+  const assertions = task.audit?.assertions ?? [];
+  const checkable = assertions.filter(item => item.kind === 'VERIFIABLE').length;
+  const verdictFor = (text: string) => {
+    const claim = task.sub_claims.find(item => item.text === text);
+    return claim ? claim.resolution?.verdict ?? claim.reconciled_verdict : undefined;
+  };
+  return <Card>
+    <SectionHeader icon="◫" title="Document assertions" subtitle={`${checkable} of ${assertions.length} researchable; the rest are reported, not checked`}/>
+    <div className="claim-list assertion-list">{assertions.map((item, index) => <div key={index}>
+      <span>{String(index + 1).padStart(2, '0')}</span>
+      <p>{item.text}<small>{item.reason}</small></p>
+      {item.kind === 'VERIFIABLE'
+        ? <VerdictBadge verdict={verdictFor(item.text)}/>
+        : <StatusBadge tone="neutral">{KIND_LABEL[item.kind] ?? item.kind}</StatusBadge>}
+    </div>)}</div>
+  </Card>;
+}
+
+export function DeskPage({ config, task, posting, claim, decompose, auditMode, reading, fileError, onClaim, onDecompose, onAuditMode, onReading, onFileError, onStart, onNavigate, onInspect, replaying }: {
+  config?: Config; task?: Task; posting: boolean; claim: string; decompose: boolean; auditMode: boolean; reading: boolean; fileError: string;
+  onClaim: (value: string) => void; onDecompose: (value: boolean) => void; onAuditMode: (value: boolean) => void;
+  onReading: (value: boolean) => void; onFileError: (value: string) => void;
   onStart: (scenario: string, protectedFlow?: boolean) => void; onNavigate: Navigate; onInspect: (id: string) => void; replaying: boolean;
 }) {
   const [tab, setTab] = useState<'sellers' | 'verdicts' | 'disputes' | 'integrations'>('sellers');
@@ -109,18 +170,21 @@ export function DeskPage({ config, task, posting, claim, decompose, onClaim, onD
     {replaying && <div className="replay-notice"><strong>Offline replay</strong><span>Recorded fixture · no payments are being made.</span></div>}
     <div className="desk-top-grid">
       <Card className="claim-card">
-        <SectionHeader icon="▤" title="The claim" subtitle="Define the work and its verification policy" aside={<StatusBadge tone="primary">Fact-checking</StatusBadge>}/>
-        <label className="field-label" htmlFor="claim">What should the agents verify?</label>
-        <textarea id="claim" value={claim} onChange={event => onClaim(event.target.value)} rows={4}/>
+        <SectionHeader icon="▤" title={auditMode ? 'The document' : 'The claim'} subtitle="Define the work and its verification policy" aside={<StatusBadge tone="primary">{auditMode ? 'Document audit' : 'Fact-checking'}</StatusBadge>}/>
+        <label className="field-label" htmlFor="claim">{auditMode ? 'Paste the document to audit' : 'What should the agents verify?'}</label>
+        <textarea id="claim" value={claim} onChange={event => onClaim(event.target.value)} rows={auditMode ? 12 : 4} placeholder={auditMode ? 'Paste a report, press release, product page or vendor claim \u2014 or drop a file below. Every factual assertion in it is extracted, sorted into what can and cannot be checked, and the checkable ones are researched independently.' : undefined}/>
+        {auditMode && <DropZone onText={onClaim} busy={reading} onBusy={onReading} onError={onFileError}/>}
+        {fileError && <p className="drop-error" role="alert">{fileError}</p>}
         <div className="policy-grid">
           
           <div><span>Grounded sources</span><StatusBadge tone="success">Required</StatusBadge></div>
           <div><span>Hallucination gate</span><StatusBadge tone="success">Required</StatusBadge></div>
         </div>
-        <label className="switch-row"><span><strong>Atomic claim decomposition</strong><small>Split complex work into independently verifiable assertions.</small></span><input type="checkbox" checked={decompose} onChange={event => onDecompose(event.target.checked)}/><i/></label>
+        <label className="switch-row"><span><strong>Document audit</strong><small>Paste prose instead of one claim. Assertions are extracted, classified, and only the checkable ones are researched.</small></span><input type="checkbox" checked={auditMode} onChange={event => onAuditMode(event.target.checked)}/><i/></label>
+        {!auditMode && <label className="switch-row"><span><strong>Atomic claim decomposition</strong><small>Split complex work into independently verifiable assertions.</small></span><input type="checkbox" checked={decompose} onChange={event => onDecompose(event.target.checked)}/><i/></label>}
         <div className="form-actions">
-          <button type="button" className="button primary-button" disabled={posting || !config || claim.trim().length < 10} onClick={() => onStart('pool')}>{posting ? 'Starting…' : 'Start verification'}<span aria-hidden="true">↗</span></button>
-          <div className="action-meta">{task ? `${task.slots.length} sellers · 2 judges each · ${formatSol(escrow)} SOL simulated` : '4 independent web researchers · 2 judges each · simulated settlement'}</div>
+          <button type="button" className="button primary-button" disabled={posting || reading || !config || claim.trim().length < 10} onClick={() => onStart('pool')}>{posting ? 'Starting…' : auditMode ? 'Audit document' : 'Start verification'}<span aria-hidden="true">↗</span></button>
+          <div className="action-meta">{task ? `${task.slots.length} sellers · 2 judges each · ${formatSol(escrow)} SOL` : `${auditMode ? '2' : '4'} independent web researchers · 2 judges each · per assertion`}</div>
           <div className="secondary-actions"><button type="button" className="button secondary-button" disabled={posting || !config} onClick={() => onStart('fabricator')} title="Run an intentionally adversarial seller to test the verification gates.">Fabricator test</button><button type="button" className="button ghost-button" disabled={posting || !config} onClick={() => onStart('fabricator', false)} title="Run work without Cosign-controlled verification settlement for comparison.">Run unprotected ↗</button></div>
         </div>
       </Card>
@@ -157,6 +221,7 @@ export function LiveRunPage({ task, onNavigate, onInspect }: { task?: Task; onNa
     {!task ? <Card><EmptyState title="No active verification" description="Start a run from the Verification Desk or load a recorded replay." action={<button type="button" className="button primary-button" onClick={() => onNavigate('desk')}>Go to Verification Desk</button>}/></Card> : <div className="live-layout">
       <div className="live-main">
         <Card><SectionHeader icon="▤" title="Run overview" aside={<CopyableHash value={task.task_id} label="run ID"/>}/><p className="run-claim">{task.claim}</p><div className="meta-chips"><span>{task.acceptance_criteria.min_citations} citations</span><span>✓ Grounded sources</span><span>✓ Hallucination check</span><span>{task.deliveries.length} seller submissions</span></div><dl className="overview-meta"><dt>Started</dt><dd>{formatDate(task.created_at)}</dd><dt>Execution</dt><dd>{task.request.execution_mode === 'live' ? 'Live agents' : 'Demo replay'}</dd><dt>Settlement</dt><dd>Simulated · no chain transaction</dd></dl></Card>
+        {task.audit && <AuditPanel task={task}/>}
         <Card className="flow-card"><SectionHeader icon="⌁" title="Verification flow" subtitle="Every submission is evaluated independently by two judges" aside={<SegmentedTabs label="Flow view" value={mode} onChange={setMode} items={[{ value: 'graph', label: 'Graph view' }, { value: 'list', label: 'List view' }]}/>}/>
           {mode === 'graph' ? <VerificationFlow task={task} sellers={sellers} onInspect={onInspect}/> : <div className="flow-list">{sellers.map(seller => <SellerCard key={seller.id} seller={seller} onInspect={() => onInspect(seller.deliveries[0]?.submission_id)}/>)}</div>}
         </Card>

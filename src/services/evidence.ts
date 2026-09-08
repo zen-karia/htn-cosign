@@ -39,7 +39,7 @@ function htmlText(html: string) {
 }
 
 // unpdf ships a serverless pdf.js build with no DOM or canvas dependency, so it runs inside workerd.
-async function pdfText(bytes: Uint8Array) {
+export async function pdfText(bytes: Uint8Array) {
   const { extractText, getDocumentProxy } = await import('unpdf');
   const { text } = await extractText(await getDocumentProxy(bytes), { mergePages: true });
   return String(text).replace(/\s+/g, ' ').trim();
