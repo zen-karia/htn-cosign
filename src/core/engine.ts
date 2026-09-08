@@ -3,6 +3,7 @@ import { TaskRequest, Submission, mockEnabled, type Task, type Settings, type De
 import { verify, type VerificationServices } from './verify';
 import { agentFor } from './agents';
 import { describeCriterion } from './criteria';
+import { verifiedConflicts } from './consistency';
 import { profiles, produce } from '../harness/sellers';
 import { Runtime } from '../services/runtime';
 import { Models } from '../services/models';
@@ -115,6 +116,19 @@ export class Engine {
         if (task.task_type === 'document_audit') {
           const { assertions } = await this.span('buyer.extract', () => this.models.extractAssertions(task.claim));
           task.audit = { assertions };
+          // Read the document against itself before spending anything on research. A figure the
+          // document's own numbers contradict is not a question the web can answer, and this is
+          // reported rather than gated: the sellers did not write the document.
+          try {
+            const report = await this.span('buyer.consistency', () => this.models.checkConsistency(assertions));
+            const conflicts = verifiedConflicts(report.conflicts, assertions);
+            task.audit = { assertions, conflicts };
+            await this.event('document.consistency', conflicts.length
+              ? `${conflicts.length} internal inconsistenc${conflicts.length === 1 ? 'y' : 'ies'} found by reading the document against itself, before any research.`
+              : 'No internal contradiction found; the document is consistent with itself.', this.runtime.mocked('openai'));
+          } catch {
+            await this.event('document.consistency', 'Internal consistency check unavailable; research continues without it.', false);
+          }
           claims = assertions.filter(a => a.kind === 'VERIFIABLE').map(a => a.text);
           if (!claims.length) {
             task.phase = 'complete'; task.status = 'refunded'; task.completed_at = new Date().toISOString();

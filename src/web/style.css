@@ -537,3 +537,11 @@ th { color: var(--text-tertiary); font-size: 8px; text-transform: uppercase; }
 .drop-zone.loaded { border-style: solid; border-color: var(--success, #1a7f37); background: var(--surface-green, #f1f8f3); }
 .drop-zone.loaded>span { color: var(--success, #1a7f37); }
 .drop-zone.loaded b { overflow-wrap: anywhere; }
+
+.conflict-list { display: grid; gap: 7px; padding: 4px 15px 10px; }
+.conflict-intro { margin: 0 0 3px; color: var(--text-tertiary); font-size: 8.5px; line-height: 1.5; }
+.conflict-list>div { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; align-items: start; gap: 9px; padding: 9px 11px; border: 1px solid var(--danger-border, #f3c9cd); border-radius: 8px; background: var(--surface-red, #fdf2f3); }
+.conflict-list>div>p { margin: 0; color: var(--text-secondary); font-size: 9.5px; line-height: 1.5; overflow-wrap: anywhere; }
+.conflict-list>div>p small { display: block; margin-top: 3px; color: var(--text-tertiary); font: 8.5px "SFMono-Regular", Consolas, monospace; }
+.conflict-list>div>b { color: var(--danger, #cf222e); font: 9px "SFMono-Regular", Consolas, monospace; }
+.assertion-list>div.flagged>span { color: var(--danger, #cf222e); font-weight: 700; }

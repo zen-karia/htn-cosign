@@ -1,5 +1,6 @@
 import React, { useMemo, useState, type ReactNode } from 'react';
 import { describeCriterion } from '../core/criteria';
+import { describeConflict } from '../core/consistency';
 import { MAX_DOCUMENT_CHARS } from '../core/models';
 import type { Delivery, Task } from '../core/models';
 import { blindSubmission } from '../core/blind';
@@ -145,14 +146,24 @@ const KIND_LABEL: Record<string, string> = { SUBJECTIVE: 'Opinion', FUTURE_PREDI
 // unresearched assertions are listed beside the researched ones rather than hidden.
 export function AuditPanel({ task }: { task: Task }) {
   const assertions = task.audit?.assertions ?? [];
+  const conflicts = task.audit?.conflicts ?? [];
   const checkable = assertions.filter(item => item.kind === 'VERIFIABLE').length;
+  const flagged = new Set(conflicts.flatMap(item => item.assertions));
   const verdictFor = (text: string) => {
     const claim = task.sub_claims.find(item => item.text === text);
     return claim ? claim.resolution?.verdict ?? claim.reconciled_verdict : undefined;
   };
   return <Card>
-    <SectionHeader icon="◫" title="Document assertions" subtitle={`${checkable} of ${assertions.length} researchable; the rest are reported, not checked`}/>
-    <div className="claim-list assertion-list">{assertions.map((item, index) => <div key={index}>
+    <SectionHeader icon="◫" title="Document assertions" subtitle={`${checkable} of ${assertions.length} researchable; the rest are reported, not checked`} aside={conflicts.length ? <StatusBadge tone="danger">{conflicts.length} internal conflict{conflicts.length === 1 ? '' : 's'}</StatusBadge> : undefined}/>
+    {conflicts.length > 0 && <div className="conflict-list">
+      <p className="conflict-intro">Found by reading the document against itself, before any research. No external source can settle these.</p>
+      {conflicts.map((item, index) => <div key={index}>
+        <StatusBadge tone="danger">{describeConflict(item.kind)}</StatusBadge>
+        <p>{item.explanation}{item.computation ? <small>{item.computation}</small> : null}</p>
+        <b>{item.assertions.map(number => String(number + 1).padStart(2, '0')).join(' + ')}</b>
+      </div>)}
+    </div>}
+    <div className="claim-list assertion-list">{assertions.map((item, index) => <div key={index} className={flagged.has(index) ? 'flagged' : undefined}>
       <span>{String(index + 1).padStart(2, '0')}</span>
       <p>{item.text}<small>{item.reason}</small></p>
       {item.kind === 'VERIFIABLE'

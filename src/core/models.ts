@@ -52,6 +52,23 @@ export const AuditExtraction = z.object({
   }).strict()).min(1).max(12),
 }).strict();
 export type ExtractedAssertion = z.infer<typeof AuditExtraction>['assertions'][number];
+// Where a document disagrees with itself. The web cannot settle this: only comparing the
+// document's own assertions can, which is why this runs before any research.
+export const ConflictKind = z.enum(['numeric_mismatch', 'contradiction', 'date_conflict', 'scope_undefined']);
+export type ConflictKind = z.infer<typeof ConflictKind>;
+export const ConsistencyReport = z.object({
+  conflicts: z.array(z.object({
+    assertions: z.array(z.number().int().nonnegative()).min(1).max(4),
+    kind: ConflictKind,
+    explanation: z.string().min(1).max(600),
+    // Present for numeric_mismatch: what the document states, and what its own other figures
+    // imply. Kept apart from the prose so the arithmetic can be re-checked in code.
+    stated_value: z.number().finite(),
+    computed_value: z.number().finite(),
+    computation: z.string().max(300),
+  }).strict()).max(10),
+}).strict();
+export type ConsistencyConflict = z.infer<typeof ConsistencyReport>['conflicts'][number];
 export const TaskRequest = z.object({
   claim: z.string().trim().min(10).max(MAX_DOCUMENT_CHARS),
   task_type: z.enum(['claim_verification', 'source_audit', 'citation_check', 'document_audit']).default('claim_verification'),
@@ -119,7 +136,7 @@ export interface Task {
   verifiability?: { classification: 'VERIFIABLE' | 'SUBJECTIVE' | 'FUTURE_PREDICTION' | 'INSUFFICIENTLY_SPECIFIED'; reason: string };
   // Present only for document_audit: every assertion found in the source document, including
   // those never researched. sub_claims holds the researchable subset.
-  audit?: { assertions: ExtractedAssertion[] };
+  audit?: { assertions: ExtractedAssertion[]; conflicts?: ConsistencyConflict[] };
 }
 export type Settings = Record<string, string | undefined>;
 // text-embedding-3-small natively produces 1536 dims. The earlier hard-coded 64
