@@ -98,8 +98,9 @@ const TEXT_TYPES = ['.txt', '.md', '.markdown', '.csv', '.json', '.html', '.htm'
 
 // A PDF goes to the Worker, which already runs unpdf for source retrieval. Everything else is
 // read in the browser. Either way the text lands in the same box, so it stays editable.
-export function DropZone({ onText, busy, onBusy, onError }: { onText: (value: string) => void; busy: boolean; onBusy: (value: boolean) => void; onError: (value: string) => void }) {
+export function DropZone({ onLoad, busy, onBusy, onError, docName, charCount }: { onLoad: (text: string, name: string) => void; busy: boolean; onBusy: (value: boolean) => void; onError: (value: string) => void; docName: string; charCount: number }) {
   const [over, setOver] = useState(false);
+  const loaded = Boolean(docName) && charCount > 0;
   const accept = async (file?: File) => {
     if (!file) return;
     onError(''); onBusy(true);
@@ -109,9 +110,9 @@ export function DropZone({ onText, busy, onBusy, onError }: { onText: (value: st
         const response = await fetch('/api/extract', { method: 'POST', body: file });
         const body = await response.json() as { text?: string; error?: string };
         if (!response.ok || !body.text) throw new Error(body.error || 'Could not read that PDF.');
-        onText(body.text);
+        onLoad(body.text, file.name);
       } else if (TEXT_TYPES.some(ext => name.endsWith(ext)) || file.type.startsWith('text/')) {
-        onText((await file.text()).replace(/\s+\n/g, '\n').trim());
+        onLoad((await file.text()).replace(/\s+\n/g, '\n').trim(), file.name);
       } else {
         throw new Error(`${file.name.split('.').pop()?.toUpperCase() || 'That file type'} is not supported. Use PDF, TXT, MD, CSV, JSON or HTML.`);
       }
@@ -119,15 +120,15 @@ export function DropZone({ onText, busy, onBusy, onError }: { onText: (value: st
     finally { onBusy(false); }
   };
   return <label
-    className={`drop-zone${over ? ' over' : ''}${busy ? ' busy' : ''}`}
+    className={`drop-zone${over ? ' over' : ''}${busy ? ' busy' : ''}${loaded ? ' loaded' : ''}`}
     onDragOver={event => { event.preventDefault(); setOver(true); }}
     onDragLeave={() => setOver(false)}
     onDrop={event => { event.preventDefault(); setOver(false); void accept(event.dataTransfer.files?.[0]); }}
   >
     <input type="file" accept=".pdf,.txt,.md,.markdown,.csv,.json,.html,.htm,text/*,application/pdf" onChange={event => { void accept(event.target.files?.[0] ?? undefined); event.target.value = ''; }}/>
-    <span aria-hidden="true">{busy ? '\u25CC' : '\u2913'}</span>
-    <b>{busy ? 'Reading document\u2026' : over ? 'Drop to load' : 'Drop a document, or click to choose'}</b>
-    <small>PDF, TXT, MD, CSV, JSON or HTML · up to 8 MB</small>
+    <span aria-hidden="true">{busy ? '\u25CC' : loaded ? '\u2713' : '\u2913'}</span>
+    <b>{busy ? 'Reading document\u2026' : over ? 'Drop to load' : loaded ? docName : 'Drop a document, or click to choose'}</b>
+    <small>{busy ? 'Extracting text' : loaded ? `${charCount.toLocaleString()} characters loaded · drop another to replace` : 'PDF, TXT, MD, CSV, JSON or HTML · up to 8 MB'}</small>
   </label>;
 }
 
@@ -154,10 +155,10 @@ export function AuditPanel({ task }: { task: Task }) {
   </Card>;
 }
 
-export function DeskPage({ config, task, posting, claim, decompose, auditMode, reading, fileError, onClaim, onDecompose, onAuditMode, onReading, onFileError, onStart, onNavigate, onInspect, replaying }: {
-  config?: Config; task?: Task; posting: boolean; claim: string; decompose: boolean; auditMode: boolean; reading: boolean; fileError: string;
+export function DeskPage({ config, task, posting, claim, decompose, auditMode, reading, fileError, docName, onLoadDocument, onClaim, onDecompose, onAuditMode, onReading, onFileError, onStart, onNavigate, onInspect, replaying }: {
+  config?: Config; task?: Task; posting: boolean; claim: string; decompose: boolean; auditMode: boolean; reading: boolean; fileError: string; docName: string;
   onClaim: (value: string) => void; onDecompose: (value: boolean) => void; onAuditMode: (value: boolean) => void;
-  onReading: (value: boolean) => void; onFileError: (value: string) => void;
+  onReading: (value: boolean) => void; onFileError: (value: string) => void; onLoadDocument: (text: string, name: string) => void;
   onStart: (scenario: string, protectedFlow?: boolean) => void; onNavigate: Navigate; onInspect: (id: string) => void; replaying: boolean;
 }) {
   const [tab, setTab] = useState<'sellers' | 'verdicts' | 'disputes' | 'integrations'>('sellers');
@@ -171,9 +172,11 @@ export function DeskPage({ config, task, posting, claim, decompose, auditMode, r
     <div className="desk-top-grid">
       <Card className="claim-card">
         <SectionHeader icon="▤" title={auditMode ? 'The document' : 'The claim'} subtitle="Define the work and its verification policy" aside={<StatusBadge tone="primary">{auditMode ? 'Document audit' : 'Fact-checking'}</StatusBadge>}/>
-        <label className="field-label" htmlFor="claim">{auditMode ? 'Paste the document to audit' : 'What should the agents verify?'}</label>
-        <textarea id="claim" value={claim} onChange={event => onClaim(event.target.value)} rows={auditMode ? 12 : 4} placeholder={auditMode ? 'Paste a report, press release, product page or vendor claim \u2014 or drop a file below. Every factual assertion in it is extracted, sorted into what can and cannot be checked, and the checkable ones are researched independently.' : undefined}/>
-        {auditMode && <DropZone onText={onClaim} busy={reading} onBusy={onReading} onError={onFileError}/>}
+        {auditMode
+          ? <><p className="field-label">Upload the document to audit</p>
+              <DropZone onLoad={onLoadDocument} busy={reading} onBusy={onReading} onError={onFileError} docName={docName} charCount={claim.trim().length}/></>
+          : <><label className="field-label" htmlFor="claim">What should the agents verify?</label>
+              <textarea id="claim" value={claim} onChange={event => onClaim(event.target.value)} rows={4}/></>}
         {fileError && <p className="drop-error" role="alert">{fileError}</p>}
         <div className="policy-grid">
           

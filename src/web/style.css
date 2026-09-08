@@ -525,7 +525,7 @@ th { color: var(--text-tertiary); font-size: 8px; text-transform: uppercase; }
 .assertion-list>div { align-items: start; }
 .assertion-list p small { display: block; margin-top: 3px; color: var(--text-tertiary); font-size: 8.5px; line-height: 1.45; }
 
-.drop-zone { display: grid; justify-items: center; gap: 2px; margin-top: 9px; padding: 15px 12px; border: 1px dashed var(--border-strong, #c7cedb); border-radius: 9px; background: var(--surface-subtle, #f7f9fc); cursor: pointer; text-align: center; transition: border-color .15s ease, background .15s ease; }
+.drop-zone { display: grid; justify-items: center; gap: 2px; margin: 0 15px; padding: 15px 12px; border: 1px dashed var(--border-strong, #c7cedb); border-radius: 9px; background: var(--surface-subtle, #f7f9fc); cursor: pointer; text-align: center; transition: border-color .15s ease, background .15s ease; }
 .drop-zone:hover, .drop-zone.over { border-color: var(--primary); background: var(--surface-blue); }
 .drop-zone.busy { cursor: progress; opacity: .75; }
 .drop-zone input { display: none; }
@@ -533,3 +533,7 @@ th { color: var(--text-tertiary); font-size: 8px; text-transform: uppercase; }
 .drop-zone b { font-size: 10px; }
 .drop-zone small { color: var(--text-tertiary); font-size: 8.5px; }
 .drop-error { margin: 7px 0 0; color: var(--danger, #cf222e); font-size: 9px; }
+
+.drop-zone.loaded { border-style: solid; border-color: var(--success, #1a7f37); background: var(--surface-green, #f1f8f3); }
+.drop-zone.loaded>span { color: var(--success, #1a7f37); }
+.drop-zone.loaded b { overflow-wrap: anywhere; }

@@ -32,6 +32,10 @@ function App() {
   const [auditMode, setAuditMode] = useState(false);
   const [reading, setReading] = useState(false);
   const [fileError, setFileError] = useState('');
+  const [docName, setDocName] = useState('');
+  const loadDocument = (text: string, name: string) => { setClaim(text); setDocName(name); };
+  // Switching modes discards the other mode's input rather than silently submitting it.
+  const switchAuditMode = (value: boolean) => { setAuditMode(value); setClaim(''); setDocName(''); setFileError(''); };
   const [posting, setPosting] = useState(false);
   const [replaying, setReplaying] = useState(false);
   const [activeDelivery, setActiveDelivery] = useState<string>();
@@ -121,7 +125,7 @@ function App() {
       {error && <div className="error-banner" role="alert"><span>!</span><p>{error}</p><button type="button" onClick={() => setError('')} aria-label="Dismiss error">×</button></div>}
       {task?.status === 'stalled' && <div className="error-banner" role="alert"><span>!</span><p>{task.error || 'A service is unavailable. Funds remain protected.'}</p>{!replaying && <button type="button" className="retry-button" onClick={() => api(`/api/tasks/${task.task_id}/retry`, { method: 'POST' }).catch(reason => setError(reason.message))}>Retry stage</button>}</div>}
       <div className="page-content">
-        {route === 'desk' && <DeskPage config={config} task={task} posting={posting} claim={claim} decompose={decompose} onClaim={setClaim} onDecompose={toggleDecompose} auditMode={auditMode} onAuditMode={setAuditMode} reading={reading} onReading={setReading} fileError={fileError} onFileError={setFileError} onStart={start} onNavigate={navigate} onInspect={inspect} replaying={replaying}/>}
+        {route === 'desk' && <DeskPage config={config} task={task} posting={posting} claim={claim} decompose={decompose} onClaim={setClaim} onDecompose={toggleDecompose} auditMode={auditMode} onAuditMode={switchAuditMode} reading={reading} onReading={setReading} fileError={fileError} onFileError={setFileError} docName={docName} onLoadDocument={loadDocument} onStart={start} onNavigate={navigate} onInspect={inspect} replaying={replaying}/>}
         {route === 'live' && <LiveRunPage task={task} onNavigate={navigate} onInspect={inspect}/>}
         {route === 'evidence' && <EvidencePage task={task} activeDeliveryId={activeDelivery} onDelivery={setActiveDelivery} onNavigate={navigate}/>}
         {route === 'receipt' && <ReceiptPage task={task} onNavigate={navigate}/>}
