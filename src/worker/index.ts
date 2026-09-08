@@ -1,5 +1,8 @@
 import { DurableObject } from 'cloudflare:workers';
 import { pdfText } from '../services/evidence';
+import { MAX_DOCUMENT_CHARS } from '../core/models';
+// The claim is one field among several, so the body cap leaves room for the rest of the JSON.
+const TASK_BODY_LIMIT = MAX_DOCUMENT_CHARS + 4000;
 import * as Sentry from '@sentry/cloudflare';
 import { z } from 'zod';
 import { createTask, Engine } from '../core/engine';
@@ -117,8 +120,8 @@ const worker = {
         } catch { return json({ error: 'Could not read that PDF.' }, 422); }
       }
       if (url.pathname === '/api/tasks' && request.method === 'POST') {
-        if (Number(request.headers.get('content-length') || 0) > 24000) return json({ error: 'Request too large' }, 413);
-        const body = await request.text(); if (body.length > 24000) return json({ error: 'Request too large' }, 413);
+        if (Number(request.headers.get('content-length') || 0) > TASK_BODY_LIMIT) return json({ error: `Document too large. The limit is ${MAX_DOCUMENT_CHARS.toLocaleString()} characters.` }, 413);
+        const body = await request.text(); if (body.length > TASK_BODY_LIMIT) return json({ error: `Document too large. The limit is ${MAX_DOCUMENT_CHARS.toLocaleString()} characters.` }, 413);
         const parsed = TaskRequest.parse(JSON.parse(body));
         if (parsed.execution_mode === 'live') {
           const missing = ['OPENAI_API_KEY', 'ELASTICSEARCH_URL'].filter(key => !env[key]);

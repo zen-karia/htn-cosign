@@ -1,5 +1,6 @@
 import React, { useMemo, useState, type ReactNode } from 'react';
 import { describeCriterion } from '../core/criteria';
+import { MAX_DOCUMENT_CHARS } from '../core/models';
 import type { Delivery, Task } from '../core/models';
 import { blindSubmission } from '../core/blind';
 import {
@@ -101,6 +102,11 @@ const TEXT_TYPES = ['.txt', '.md', '.markdown', '.csv', '.json', '.html', '.htm'
 export function DropZone({ onLoad, busy, onBusy, onError, docName, charCount }: { onLoad: (text: string, name: string) => void; busy: boolean; onBusy: (value: boolean) => void; onError: (value: string) => void; docName: string; charCount: number }) {
   const [over, setOver] = useState(false);
   const loaded = Boolean(docName) && charCount > 0;
+  // Truncating would change what is being audited, so an oversize document is refused outright.
+  const within = (text: string, name: string) => {
+    if (text.length > MAX_DOCUMENT_CHARS) throw new Error(`${name} holds ${text.length.toLocaleString()} characters of text. The limit is ${MAX_DOCUMENT_CHARS.toLocaleString()} — audit a section of it instead.`);
+    return text;
+  };
   const accept = async (file?: File) => {
     if (!file) return;
     onError(''); onBusy(true);
@@ -110,12 +116,13 @@ export function DropZone({ onLoad, busy, onBusy, onError, docName, charCount }: 
         const response = await fetch('/api/extract', { method: 'POST', body: file });
         const body = await response.json() as { text?: string; error?: string };
         if (!response.ok || !body.text) throw new Error(body.error || 'Could not read that PDF.');
-        onLoad(body.text, file.name);
+        onLoad(within(body.text, file.name), file.name);
       } else if (TEXT_TYPES.some(ext => name.endsWith(ext)) || file.type.startsWith('text/')) {
-        onLoad((await file.text()).replace(/\s+\n/g, '\n').trim(), file.name);
+        onLoad(within((await file.text()).replace(/\s+\n/g, '\n').trim(), file.name), file.name);
       } else {
         throw new Error(`${file.name.split('.').pop()?.toUpperCase() || 'That file type'} is not supported. Use PDF, TXT, MD, CSV, JSON or HTML.`);
       }
+      return;
     } catch (reason) { onError(reason instanceof Error ? reason.message : 'Could not read that file.'); }
     finally { onBusy(false); }
   };
@@ -128,7 +135,7 @@ export function DropZone({ onLoad, busy, onBusy, onError, docName, charCount }: 
     <input type="file" accept=".pdf,.txt,.md,.markdown,.csv,.json,.html,.htm,text/*,application/pdf" onChange={event => { void accept(event.target.files?.[0] ?? undefined); event.target.value = ''; }}/>
     <span aria-hidden="true">{busy ? '\u25CC' : loaded ? '\u2713' : '\u2913'}</span>
     <b>{busy ? 'Reading document\u2026' : over ? 'Drop to load' : loaded ? docName : 'Drop a document, or click to choose'}</b>
-    <small>{busy ? 'Extracting text' : loaded ? `${charCount.toLocaleString()} characters loaded · drop another to replace` : 'PDF, TXT, MD, CSV, JSON or HTML · up to 8 MB'}</small>
+    <small>{busy ? 'Extracting text' : loaded ? `${charCount.toLocaleString()} characters loaded · drop another to replace` : `PDF, TXT, MD, CSV, JSON or HTML · up to ${MAX_DOCUMENT_CHARS.toLocaleString()} characters`}</small>
   </label>;
 }
 

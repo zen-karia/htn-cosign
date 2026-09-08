@@ -34,6 +34,10 @@ export const JudgeVerdict = z.object({
 export type JudgeVerdict = z.infer<typeof JudgeVerdict>;
 export const TieVerdict = z.object({ final_pass: z.boolean(), confidence: z.number().min(0).max(1), reasoning: z.string().min(1).max(6000) }).strict();
 export const Reconciliation = z.object({ verdict: Verdict, confidence: z.number().min(0).max(1), reasoning: z.string().min(1).max(6000) }).strict();
+// A document audit shares the claim field, so the ceiling is a document's, not a sentence's:
+// roughly twenty pages of prose. The Worker's request cap and the upload control both derive
+// from this, because a limit the browser does not know about surfaces as an opaque 413.
+export const MAX_DOCUMENT_CHARS = 60000;
 export const Decomposition = z.object({ claims: z.array(z.string().min(10).max(1500)).min(1).max(4) }).strict();
 export const AssertionKind = z.enum(['VERIFIABLE', 'SUBJECTIVE', 'FUTURE_PREDICTION', 'INSUFFICIENTLY_SPECIFIED']);
 export type AssertionKind = z.infer<typeof AssertionKind>;
@@ -49,7 +53,7 @@ export const AuditExtraction = z.object({
 }).strict();
 export type ExtractedAssertion = z.infer<typeof AuditExtraction>['assertions'][number];
 export const TaskRequest = z.object({
-  claim: z.string().trim().min(10).max(20000),
+  claim: z.string().trim().min(10).max(MAX_DOCUMENT_CHARS),
   task_type: z.enum(['claim_verification', 'source_audit', 'citation_check', 'document_audit']).default('claim_verification'),
   payment_amount_sol: z.number().min(0.001).max(0.1).default(0.05).refine(x => Math.abs(x * 1e9 - Math.round(x * 1e9)) < 0.001, 'Use whole lamports'),
   acceptance_criteria: Rubric.default({}),
