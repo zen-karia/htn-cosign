@@ -112,7 +112,7 @@ export class Engine {
         const receipt = await this.span('escrow.initialize', () => this.escrow.initialize(task));
         task.receipts.push(receipt); task.locked_sol = task.payment_amount_sol * task.slots.length;
         task.phase = 'decompose';
-        await this.event('escrow.funded', `${task.locked_sol.toFixed(3)} SOL reserved across ${task.slots.length} simulated allocation(s).`, true);
+        await this.event('escrow.funded', `${task.locked_sol.toFixed(3)} SOL reserved across ${task.slots.length} allocation(s).`, this.runtime.mocked('solana'));
         break;
       }
       case 'decompose': {
@@ -193,7 +193,7 @@ export class Engine {
         }));
         attempts.forEach((result, attemptIndex) => {
           if (result.status === 'rejected') {
-            const slot = batch[attemptIndex].slot; slot.error = 'Seller research failed; its simulated allocation remains protected.';
+            const slot = batch[attemptIndex].slot; slot.error = 'Seller research failed; its allocation remains protected.';
             task.activity.push({ id: task.activity.length + 1, at: new Date().toISOString(), stage: 'seller.failed', message: `${slot.seller_id} did not return a valid research submission.`, mocked: false });
           }
         });
@@ -260,7 +260,12 @@ export class Engine {
         task.phase = 'settle'; await this.save(task); break;
       }
       case 'settle': {
-        await this.event('settlement.started', 'Calculating simulated settlement from completed verification results.', true);
+        // These receipts carry real devnet signatures when settlement is live; saying SIMULATED
+        // regardless told a reader the opposite of what the transaction memo proves.
+        const simulated = this.runtime.mocked('solana');
+        const settlementWord = simulated ? 'SIMULATED RELEASE' : 'RELEASED';
+        const returnWord = simulated ? 'SIMULATED RETURN' : 'RETURNED';
+        await this.event('settlement.started', `Calculating ${simulated ? 'simulated ' : ''}settlement from completed verification results.`, simulated);
         // Transactions touch the same escrow account, so settle slots sequentially. Model work above is concurrent.
         for (const [index, slot] of task.slots.entries()) {
           if (slot.state !== 'pending') continue;
@@ -292,15 +297,15 @@ export class Engine {
           for (const delivery of deliveries) if (delivery.dispute) { delivery.dispute.resolution = 'auto_refund'; delivery.dispute.evidence_hash = hash; }
           const share = Number.isInteger(verified) ? String(verified) : verified.toFixed(2);
           const scope = units > 1 ? ` (credit for ${share} of ${units} sub-claims)` : '';
-          if (earned > 0) await this.event('payment.released', `SIMULATED RELEASE ${released_sol.toFixed(3)} SOL to ${slot.seller_id}${scope}.`, true);
+          if (earned > 0) await this.event('payment.released', `${settlementWord} ${released_sol.toFixed(3)} SOL to ${slot.seller_id}${scope}.`, simulated);
           // Only a seller that earned nothing was blocked; otherwise the buyer is simply keeping the
           // part of the allocation that was never verified.
           if (earned < lamports) await this.event('payment.returned', earned > 0
-            ? `SIMULATED RETURN ${returned_sol.toFixed(3)} SOL to the buyer; ${slot.seller_id} delivered ${share} of ${units} sub-claim(s) in full.`
-            : `PAYMENT BLOCKED · SIMULATED RETURN ${returned_sol.toFixed(3)} SOL for ${slot.seller_id}${scope}.`, true);
+            ? `${returnWord} ${returned_sol.toFixed(3)} SOL to the buyer; ${slot.seller_id} delivered ${share} of ${units} sub-claim(s) in full.`
+            : `PAYMENT BLOCKED · ${returnWord} ${returned_sol.toFixed(3)} SOL for ${slot.seller_id}${scope}.`, this.runtime.mocked('solana'));
         }
         task.status = task.paid_sol > 0 ? 'paid' : 'refunded'; task.phase = 'complete'; task.completed_at = new Date().toISOString(); delete task.error;
-        await this.event('run.completed', `Simulated settlement: ${task.paid_sol.toFixed(3)} SOL releasable, ${task.refunded_sol.toFixed(3)} SOL protected and returnable.`, true); break;
+        await this.event('run.completed', `${simulated ? 'Simulated settlement' : 'Settled on devnet'}: ${task.paid_sol.toFixed(3)} SOL releasable, ${task.refunded_sol.toFixed(3)} SOL protected and returnable.`, simulated); break;
       }
     }
   }

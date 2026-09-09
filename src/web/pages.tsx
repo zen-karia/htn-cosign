@@ -39,7 +39,7 @@ import {
 } from './view-model';
 
 export type Config = {
-  mode?: 'LIVE'; settlement?: 'SIMULATED';
+  mode?: 'LIVE'; settlement?: 'SIMULATED' | 'DEVNET';
   services: Record<string, { mocked: boolean; optional: boolean; configured?: boolean }>;
   demo_claim: string;
   complex_claim: string;
@@ -63,7 +63,7 @@ function DownloadButton({ filename, data, children }: { filename: string; data: 
 function ModeNotice({ task, config, onIntegrations }: { task?: Task; config?: Config; onIntegrations: () => void }) {
   const missing = config ? Object.entries(config.services).filter(([, value]) => !value.optional && !value.configured && !value.mocked).map(([name]) => name) : [];
   const replay = !!task && task.request.execution_mode !== 'live';
-  return <div className="mode-notice"><StatusBadge tone={replay ? 'warning' : missing.length ? 'warning' : 'success'}>{replay ? 'Replay' : 'Live agents'}</StatusBadge><p>{missing.length ? `${missing.join(', ')} not configured.` : 'OpenAI research and Elastic evidence are configured.'} Settlement is simulated.</p><button type="button" onClick={onIntegrations}>Environment ↗</button></div>;
+  return <div className="mode-notice"><StatusBadge tone={replay ? 'warning' : missing.length ? 'warning' : 'success'}>{replay ? 'Replay' : 'Live agents'}</StatusBadge><p>{missing.length ? `${missing.join(', ')} not configured.` : 'OpenAI research and Elastic evidence are configured.'} {config?.settlement === 'DEVNET' ? 'Settlement is live on Solana devnet.' : 'Settlement is simulated.'}</p><button type="button" onClick={onIntegrations}>Environment ↗</button></div>;
 }
 
 function SellerCard({ seller, onInspect }: { seller: SellerViewModel; onInspect?: () => void }) {
@@ -250,7 +250,7 @@ export function LiveRunPage({ task, onNavigate, onInspect }: { task?: Task; onNa
     <Card className="pipeline-card"><StepProgress task={task}/></Card>
     {!task ? <Card><EmptyState title="No active verification" description="Start a run from the Verification Desk or load a recorded replay." action={<button type="button" className="button primary-button" onClick={() => onNavigate('desk')}>Go to Verification Desk</button>}/></Card> : <div className="live-layout">
       <div className="live-main">
-        <Card><SectionHeader icon="▤" title="Run overview" aside={<CopyableHash value={task.task_id} label="run ID"/>}/><p className="run-claim">{task.claim}</p><div className="meta-chips"><span>{task.acceptance_criteria.min_citations} citations</span><span>✓ Grounded sources</span><span>✓ Hallucination check</span><span>{task.deliveries.length} seller submissions</span></div><dl className="overview-meta"><dt>Started</dt><dd>{formatDate(task.created_at)}</dd><dt>Execution</dt><dd>{task.request.execution_mode === 'live' ? 'Live agents' : 'Demo replay'}</dd><dt>Settlement</dt><dd>Simulated · no chain transaction</dd></dl></Card>
+        <Card><SectionHeader icon="▤" title="Run overview" aside={<CopyableHash value={task.task_id} label="run ID"/>}/><p className="run-claim">{task.claim}</p><div className="meta-chips"><span>{task.acceptance_criteria.min_citations} citations</span><span>✓ Grounded sources</span><span>✓ Hallucination check</span><span>{task.deliveries.length} seller submissions</span></div><dl className="overview-meta"><dt>Started</dt><dd>{formatDate(task.created_at)}</dd><dt>Execution</dt><dd>{task.request.execution_mode === 'live' ? 'Live agents' : 'Demo replay'}</dd><dt>Settlement</dt><dd>{task.service_modes.solana ? 'Simulated · no chain transaction' : 'Solana devnet · one transaction per slot'}</dd></dl></Card>
         {task.audit && <AuditPanel task={task}/>}
         <Card className="flow-card"><SectionHeader icon="⌁" title="Verification flow" subtitle="Every submission is evaluated independently by two judges" aside={<SegmentedTabs label="Flow view" value={mode} onChange={setMode} items={[{ value: 'graph', label: 'Graph view' }, { value: 'list', label: 'List view' }]}/>}/>
           {mode === 'graph' ? <VerificationFlow task={task} sellers={sellers} onInspect={onInspect}/> : <div className="flow-list">{sellers.map(seller => <SellerCard key={seller.id} seller={seller} onInspect={() => onInspect(seller.deliveries[0]?.submission_id)}/>)}</div>}

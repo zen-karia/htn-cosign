@@ -12,7 +12,8 @@ for (const [service, keys] of Object.entries(required)) {
   console.log(`${service.replace('_optional', '').padEnd(15)} ${missing.length ? `[${optional ? 'OPTIONAL / NOT CONFIGURED' : 'MISSING'}] · ${missing.join(', ')}` : '[CONFIGURED]'}`);
   if (!optional && missing.length) failures++;
 }
-console.log('settlement      [SIMULATED] · no Solana transaction is sent by Verification Desk');
+const simulatedSettlement = String(env.MOCK_MODE_SOLANA ?? '').toLowerCase() === 'true' || !env.SOLANA_BUYER_SECRET_KEY || env.SOLANA_SETTLEMENT !== 'transfer';
+console.log(`settlement      ${simulatedSettlement ? '[SIMULATED] · no Solana transaction is sent by Verification Desk' : '[DEVNET] · each slot settles in its own transaction carrying the verification hash'}`);
 console.log(`Offline cache: ${existsSync('artifacts/demo-cache.json') ? 'present' : 'run npm run demo'}`);
 console.log(`Local env: ${existsSync('.dev.vars') ? 'present; rerun npm run setup after editing .env' : 'run npm run setup'}`);
 console.log('GPTZero Bibliography Scan needs real, publicly findable citations; a fictional corpus makes every citation "fake". Baseten/Browserbase are optional and not claimed.');
