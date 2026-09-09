@@ -10,7 +10,7 @@ beside them come from headless Chrome at 2x:
 """
 import io, sys
 
-W, H = 1180, 1370
+W, H = 1180, 1618
 
 LIGHT = dict(
     name='light',
@@ -67,6 +67,20 @@ class Svg:
         self.add(a + '/>')
     def dot(self, cx, cy, r, fill):
         self.add(f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="{fill}"/>')
+
+def wrap(text, limit):
+    lines, line = [], ''
+    for word in text.split(' '):
+        candidate = f'{line} {word}'.strip()
+        if len(candidate) > limit and line:
+            lines.append(line)
+            line = word
+        else:
+            line = candidate
+    if line:
+        lines.append(line)
+    return lines
+
 
 def zone(s, x, y, w, h, label, sub=None):
     p = s.p
@@ -165,9 +179,55 @@ def build(p):
         px += cw + gap
     s.text(CX + 36, ty + 90, 'Every phase persists before the alarm returns, so a restart resumes mid-run instead of starting over.', size=11, fill=p['muted'])
     s.text(CX + 36, ty + 108, 'An unavailable service is retried three times, then the task pauses rather than inventing a result.', size=11, fill=p['muted'])
-    b2 = y2 + zh
+    cf_bottom = y2 + zh
+
+    s.arrow(MID, cf_bottom, MID, cf_bottom + 26, stroke=p['check'])
+    s.text(MID + 10, cf_bottom + 18, 'a document, not a claim', size=10, fill=p['faint'], font=MONO)
+
+    # ---------- 2b. document intake ----------
+    yd = cf_bottom + 26
+    zhd = 230
+    zone(s, CX, yd, CW, zhd, 'DOCUMENT INTAKE',
+         'Only for an audit. A typed claim skips this entirely and goes straight to the panel.')
+    dy = yd + 54
+    inner = CW - 36
+    gap = 14
+    dw = (inner - gap * 2) / 3
+    steps = [
+        (p['check'], 'Extract', 'Pull every assertion out of the prose, resolving pronouns so each stands alone'),
+        (p['check'], 'Classify', 'Researchable, or opinion, forecast, or too under-specified to check'),
+        (p['judge'], 'Reconcile internally', 'Read the assertions against each other, before any research is paid for'),
+    ]
+    dx = CX + 18
+    for accent, title, sub_text in steps:
+        wrapped = wrap(sub_text, 44)[:2]
+        card(s, dx, dy, dw, 62, [
+            (title, 12.5, p['text'], '600', SANS, 4),
+            *[(line, 10.3, p['muted'], '400', SANS, 2 if i == 0 else 0) for i, line in enumerate(wrapped)],
+        ], accent=accent, bg=p['check_bg'] if accent == p['check'] else p['judge_bg'], pad=11)
+        dx += dw + gap
+    ky = dy + 78
+    kinds = [
+        ('numeric mismatch', p['bad'], p['bad_bg'], 'a figure its own numbers contradict'),
+        ('contradiction', p['bad'], p['bad_bg'], 'two assertions that cannot both hold'),
+        ('date conflict', p['check'], p['check_bg'], 'one event, two dates'),
+        ('basis undefined', p['faint'], p['chip'], 'a figure with no stated basis'),
+    ]
+    gap = 12
+    kw = (inner - gap * 3) / 4
+    kx = CX + 18
+    for name, col, bg, sub_text in kinds:
+        s.rect(kx, ky, kw, 46, bg, p['card_line'], r=8)
+        s.dot(kx + 15, ky + 18, 4, col)
+        s.text(kx + 26, ky + 22, name, size=10, fill=col, weight='600', font=MONO)
+        s.text(kx + 13, ky + 37, sub_text, size=9.3, fill=p['muted'])
+        kx += kw + gap
+    s.text(CX + 18, yd + zhd - 28, 'The model proposes these findings; code verifies them. A numeric mismatch whose own two figures agree is discarded, and so is any', size=10.3, fill=p['muted'])
+    s.text(CX + 18, yd + zhd - 13, 'reference to an assertion the document never made. Reported, never gated \u2014 the sellers did not write the document.', size=10.3, fill=p['muted'])
+    b2 = yd + zhd
 
     s.arrow(MID, b2, MID, b2 + 26, stroke=p['agent'])
+    s.text(MID + 10, b2 + 18, 'researchable assertions only', size=10, fill=p['faint'], font=MONO)
 
     # ---------- 3. research panel ----------
     y3 = b2 + 26
@@ -329,7 +389,7 @@ def build(p):
     s.text(0, 0, 'One distributed trace per task · spans stitched across alarm restarts', size=10.5, fill=p['muted'], anchor='middle')
     s.text(0, 18, 'Errors, releases from CF_VERSION_METADATA, Worker + browser source maps', size=10.5, fill=p['muted'], anchor='middle')
     s.add('</g>')
-    for yy in [y1 + 39, y2 + 134, y3 + 88, y4 + 107, y5 + 112, oy + 31, cy2 + 31]:
+    for yy in [y1 + 39, y2 + 134, yd + 88, y3 + 88, y4 + 107, y5 + 112, oy + 31, cy2 + 31]:
         s.line(CR, yy, rx0, yy, stroke=p['sentry'], sw=1, dash='3 4')
 
     s.add('</svg>')

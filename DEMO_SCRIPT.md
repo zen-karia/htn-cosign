@@ -11,18 +11,39 @@ npm run demo -- --decompose
 npm run dev
 ```
 
-Open http://127.0.0.1:8787. Inspect Integrations: mock labels mean fixtures, not live sponsor evidence. Complete README's final live setup before claiming real API calls or devnet settlement.
+Open http://127.0.0.1:8787. Check Integrations: mock labels mean fixtures, not live sponsor evidence. `npm run doctor` reports whether settlement is `[DEVNET]` or `[SIMULATED]`; only claim devnet when it says so and an Explorer link resolves.
 
-## Main run — three minutes
+Have `docs/samples/programme-review.pdf` ready to drag in.
 
-1. **Show the failure first.** Leave the default emissions claim. Click **Run unprotected**, or `npm run demo:naive`. Say: “A confident agent provides a verdict and three citations and gets paid. But two sources don’t exist and the third quotation was invented.” Inspect the submission. Call mock payments simulated; otherwise open the actual devnet receipt.
-2. **Same claim, Cosign on.** Click **Run the seller pool**, or `npm run demo`. Say: “Four agents attempt the same fact-check. We don’t tell the verification layer which one is lying.” Dashboard identities are audience-facing; the judges receive neither labels nor an ordered seller batch.
-3. **Inspect the catch.** Open **Verdicts**. Show `NOT FOUND`, `QUOTE MISMATCH`, or `UNSUPPORTED`. Compare under-sourced work: its source is real, but one citation fails a three-citation contract. A grounded `refuted` answer is valid work.
-4. **Put a number on it.** Point to **PAYMENT BLOCKED** and read the actual protected/refunded amount. The fixture returns 0.100 SOL across two allocations. Live outcomes may differ; never announce a result before observing it.
-5. **Show the dispute.** Open **Disputes**: authorization, delivery, exact failed criteria and evidence hash. Download the JSON. Open real devnet refund receipts when available; otherwise explicitly call this an offline refund simulation.
-6. **Show decomposition.** Enable **Decompose into atomic claims** or run `npm run demo -- --decompose`. Show three claims, twelve submissions, a preserved `contested` emissions claim, its document-based resolution, and the parent verdict. Sellers must pass every atomic claim to receive payment.
-7. **Show observability.** Only with confirmed ingestion, open **Integrations → Open task trace in Sentry**. Narrate submission, grounding, hallucination, judges, resolver, and settlement for happy/dispute traces. Without credentials, call the activity feed local evidence.
-8. Close: **“Agents paying other agents to verify whether agents are lying — and nobody gets paid until two independent judges cosign the work.”** Hard grounding/hallucination failures veto payment even if a tiebreak favors the work.
+## Main run — four minutes
+
+**1. Lead with the document, not the claim.** Turn on **Document audit**, drop in `docs/samples/programme-review.pdf`, click **Audit document**.
+
+> "This is an analyst briefing. Before we spend a cent researching it, the system reads it against itself."
+
+**2. Show the internal contradictions.** They appear before any research finishes. Three of them, and the numeric one is the point:
+
+> "The document claims a 1,200 percent cost overrun. Its own figures — ten billion against an original one billion — give 900. No search engine can catch that. You can only catch it by reading the document as a whole."
+
+Say plainly that the model proposes these and code verifies them: a mismatch whose own two figures agree is thrown away.
+
+**3. Show what could not be checked at all.** Twelve assertions, eight researchable. Two are opinion, two too under-specified. Point at them: deciding which sentences are even checkable is the messy part, and they are reported rather than dropped.
+
+**4. Let the research land.** The eight researchable assertions go to independent agents on different models. When the 1,200 percent figure comes back **refuted**:
+
+> "Caught twice, independently. Internally against the document's own numbers, and externally by agents that never saw the internal finding."
+
+**5. Inspect one agent.** Open **Evidence**. The middle panel is the document analysis: the assertion, why it was classed researchable, the conflict it belongs to, then the verdict. Switch submissions to show two agents on the same assertion.
+
+**6. Show the gate with a fabricated source.** Run `npm run demo:naive`, or use a claim run. Show `NOT FOUND` / `QUOTE MISMATCH`, and say both LLM judges once approved a CERN URL that returns 404 — the deterministic grounding gate is what rejected it.
+
+**7. Put a number on it.** Read the actual protected/released amounts off the settlement summary. Open the Explorer link on a receipt. Never announce an amount before observing it.
+
+**8. Show observability.** Only with confirmed ingestion, open **Integrations → Open task trace in Sentry** and narrate extraction, consistency, sellers, grounding, judges and settlement.
+
+**9. Close.**
+
+> "Cosign treats its own AI agents as untrusted input. It finds where a document contradicts itself, checks what is left against the world, and pays only for what it can verify."
 
 ## Sixty-second fallback
 
@@ -49,7 +70,7 @@ Show one fabricated seller paid without protection, then blocked with a structur
 | Elasticsearch | Real hybrid/ES|QL result; disclose mocked vs neural vectors |
 | OpenAI | Non-mocked model receipts; Codex build work is a separate claim |
 | GPTZero | Confirmed hallucination contract and live result, not authorship probability |
-| Solana | Real devnet Explorer link; `MOCK-*` is not a signature |
+| Solana | Real devnet Explorer link; `MOCK-*` is not a signature. `npm run doctor` must read `[DEVNET]` |
 | Sentry | Open ingested happy/dispute traces, not just a configured DSN |
 | Baseten/Browserbase | Not implemented or claimed |
 

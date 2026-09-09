@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="1370" viewBox="0 0 1180 1370">
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="1618" viewBox="0 0 1180 1618">
 <defs>
 <marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 1 L 9 5 L 0 9 z" fill="#6d757e"/></marker>
 <marker id="aok" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 1 L 9 5 L 0 9 z" fill="#3fb950"/></marker>
@@ -7,7 +7,7 @@
 <marker id="ack" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 1 L 9 5 L 0 9 z" fill="#d29922"/></marker>
 <marker id="ajd" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 1 L 9 5 L 0 9 z" fill="#58a6ff"/></marker>
 </defs>
-<rect x="0" y="0" width="1180" height="1370" rx="0" fill="#0d1117"/>
+<rect x="0" y="0" width="1180" height="1618" rx="0" fill="#0d1117"/>
 <text x="24" y="34" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="17" font-weight="700" fill="#e6edf3" text-anchor="start">Cosign</text>
 <text x="90" y="34" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="13" font-weight="400" fill="#9198a1" text-anchor="start">verify-then-settle, end to end</text>
 <circle cx="706" cy="30" r="4.2" fill="#d29922"/>
@@ -75,126 +75,165 @@
 <text x="923.0" y="334" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="9.5" font-weight="400" fill="#9198a1" text-anchor="middle">complete</text>
 <text x="60" y="366" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="400" fill="#9198a1" text-anchor="start">Every phase persists before the alarm returns, so a restart resumes mid-run instead of starting over.</text>
 <text x="60" y="384" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="400" fill="#9198a1" text-anchor="start">An unavailable service is retried three times, then the task pauses rather than inventing a result.</text>
-<line x1="517.0" y1="430" x2="517.0" y2="456" stroke="#a371f7" stroke-width="1.6" marker-end="url(#a)"/>
-<rect x="24" y="456" width="986" height="176" rx="12" fill="#151b23" stroke="#2c333b" stroke-width="1"/>
-<text x="42" y="480" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="700" fill="#6d757e" text-anchor="start" letter-spacing="1.4">RESEARCH PANEL</text>
-<text x="42" y="497" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="400" fill="#9198a1" text-anchor="start">Four models, four research strategies, separate tool budgets — one provider, so this is strategy diversity, not model-family independence.</text>
-<rect x="42" y="510" width="227.0" height="92" rx="8" fill="#1b1229" stroke="#3d444d" stroke-width="1"/>
-<rect x="42" y="510" width="3.2" height="92" rx="1.6" fill="#a371f7"/>
-<text x="57" y="531" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="9" font-weight="700" fill="#a371f7" text-anchor="start">AGENT 1</text>
-<text x="57" y="548" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="12" font-weight="600" fill="#e6edf3" text-anchor="start">gpt-4.1-mini</text>
-<text x="57" y="564.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="400" fill="#9198a1" text-anchor="start">Primary and official sources only</text>
-<text x="57" y="577.0" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="9.5" font-weight="400" fill="#6d757e" text-anchor="start">6 tool calls · temp 0.2</text>
-<rect x="283.0" y="510" width="227.0" height="92" rx="8" fill="#1b1229" stroke="#3d444d" stroke-width="1"/>
-<rect x="283.0" y="510" width="3.2" height="92" rx="1.6" fill="#a371f7"/>
-<text x="298.0" y="531" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="9" font-weight="700" fill="#a371f7" text-anchor="start">AGENT 2</text>
-<text x="298.0" y="548" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="12" font-weight="600" fill="#e6edf3" text-anchor="start">gpt-4o-mini</text>
-<text x="298.0" y="564.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="400" fill="#9198a1" text-anchor="start">Audits every number, date and unit</text>
-<text x="298.0" y="577.0" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="9.5" font-weight="400" fill="#6d757e" text-anchor="start">8 tool calls · temp 0.8</text>
-<rect x="524.0" y="510" width="227.0" height="92" rx="8" fill="#1b1229" stroke="#3d444d" stroke-width="1"/>
-<rect x="524.0" y="510" width="3.2" height="92" rx="1.6" fill="#a371f7"/>
-<text x="539.0" y="531" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="9" font-weight="700" fill="#a371f7" text-anchor="start">AGENT 3</text>
-<text x="539.0" y="548" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="12" font-weight="600" fill="#e6edf3" text-anchor="start">gpt-5-mini</text>
-<text x="539.0" y="564.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="400" fill="#9198a1" text-anchor="start">Independent, unaffiliated corroboration</text>
-<text x="539.0" y="577.0" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="9.5" font-weight="400" fill="#6d757e" text-anchor="start">8 tool calls</text>
-<rect x="765.0" y="510" width="227.0" height="92" rx="8" fill="#1b1229" stroke="#3d444d" stroke-width="1"/>
-<rect x="765.0" y="510" width="3.2" height="92" rx="1.6" fill="#a371f7"/>
-<text x="780.0" y="531" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="9" font-weight="700" fill="#a371f7" text-anchor="start">AGENT 4</text>
-<text x="780.0" y="548" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="12" font-weight="600" fill="#e6edf3" text-anchor="start">gpt-4o</text>
-<text x="780.0" y="564.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="400" fill="#9198a1" text-anchor="start">Adversarial: searches for the refutation</text>
-<text x="780.0" y="577.0" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="9.5" font-weight="400" fill="#6d757e" text-anchor="start">10 tool calls · temp 0.6</text>
-<text x="42" y="618" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="400" fill="#9198a1" text-anchor="start">Each seller runs the Responses API with web search and returns a verdict, per-sub-claim answers, sources and exact quotes. 2–4 are staffed per task. Nothing they say is trusted yet.</text>
-<line x1="517.0" y1="632" x2="517.0" y2="658" stroke="#d29922" stroke-width="1.6" marker-end="url(#a)"/>
-<text x="527.0" y="650" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="10" font-weight="400" fill="#6d757e" text-anchor="start">claim · sources · quotes</text>
-<rect x="24" y="658" width="986" height="214" rx="12" fill="#151b23" stroke="#2c333b" stroke-width="1"/>
-<text x="42" y="682" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="700" fill="#6d757e" text-anchor="start" letter-spacing="1.4">EVIDENCE PIPELINE</text>
-<text x="42" y="699" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="400" fill="#9198a1" text-anchor="start">Runs server-side, outside the agents’ control. Deterministic code, no model in the loop.</text>
-<rect x="42" y="712" width="307.3333333333333" height="56" rx="8" fill="#241c0c" stroke="#3d444d" stroke-width="1"/>
-<rect x="42" y="712" width="3.2" height="56" rx="1.6" fill="#d29922"/>
-<text x="56" y="735.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="12.5" font-weight="600" fill="#e6edf3" text-anchor="start">Retrieve</text>
-<text x="56" y="750.0" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="400" fill="#9198a1" text-anchor="start">Fetch every cited URL, extract text, hash it, index it</text>
-<rect x="363.3333333333333" y="712" width="307.3333333333333" height="56" rx="8" fill="#241c0c" stroke="#3d444d" stroke-width="1"/>
-<rect x="363.3333333333333" y="712" width="3.2" height="56" rx="1.6" fill="#d29922"/>
-<text x="377.3333333333333" y="735.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="12.5" font-weight="600" fill="#e6edf3" text-anchor="start">Ground</text>
-<text x="377.3333333333333" y="750.0" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="400" fill="#9198a1" text-anchor="start">Quote must reach 0.75 three-gram containment in that page</text>
-<rect x="684.6666666666666" y="712" width="307.3333333333333" height="56" rx="8" fill="#241c0c" stroke="#3d444d" stroke-width="1"/>
-<rect x="684.6666666666666" y="712" width="3.2" height="56" rx="1.6" fill="#d29922"/>
-<text x="698.6666666666666" y="735.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="12.5" font-weight="600" fill="#e6edf3" text-anchor="start">Blind</text>
-<text x="698.6666666666666" y="750.0" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="400" fill="#9198a1" text-anchor="start">Strip seller identity, sort sources, shuffle review order</text>
-<rect x="42" y="784" width="228.5" height="52" rx="8" fill="#12261a" stroke="#3d444d" stroke-width="1"/>
-<circle cx="57" cy="804" r="4" fill="#3fb950"/>
-<text x="68" y="808" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="11" font-weight="600" fill="#3fb950" text-anchor="start">grounded</text>
-<text x="55" y="825" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="9.8" font-weight="400" fill="#9198a1" text-anchor="start">quote found — counts toward payment</text>
-<rect x="282.5" y="784" width="228.5" height="52" rx="8" fill="#241c0c" stroke="#3d444d" stroke-width="1"/>
-<circle cx="297.5" cy="804" r="4" fill="#d29922"/>
-<text x="308.5" y="808" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="11" font-weight="600" fill="#d29922" text-anchor="start">contradicted</text>
-<text x="295.5" y="825" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="9.8" font-weight="400" fill="#9198a1" text-anchor="start">page real, quote absent — no credit</text>
-<rect x="523.0" y="784" width="228.5" height="52" rx="8" fill="#2a1416" stroke="#3d444d" stroke-width="1"/>
-<circle cx="538.0" cy="804" r="4" fill="#f85149"/>
-<text x="549.0" y="808" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="11" font-weight="600" fill="#f85149" text-anchor="start">nonexistent</text>
-<text x="536.0" y="825" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="9.8" font-weight="400" fill="#9198a1" text-anchor="start">404 — fabrication, vetoes the payout</text>
-<rect x="763.5" y="784" width="228.5" height="52" rx="8" fill="#1c232b" stroke="#3d444d" stroke-width="1"/>
-<circle cx="778.5" cy="804" r="4" fill="#6d757e"/>
-<text x="789.5" y="808" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="11" font-weight="600" fill="#6d757e" text-anchor="start">unverifiable</text>
-<text x="776.5" y="825" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="9.8" font-weight="400" fill="#9198a1" text-anchor="start">403 or PDF — not held against the seller</text>
-<text x="42" y="858" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="400" fill="#9198a1" text-anchor="start">A 404 is fraud; a 403 or a PDF is infrastructure. Separating the two is why honest sellers still get paid.</text>
-<line x1="517.0" y1="872" x2="517.0" y2="898" stroke="#58a6ff" stroke-width="1.6" marker-end="url(#a)"/>
-<rect x="24" y="898" width="986" height="240" rx="12" fill="#151b23" stroke="#2c333b" stroke-width="1"/>
-<text x="42" y="922" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="700" fill="#6d757e" text-anchor="start" letter-spacing="1.4">BLIND VERIFICATION</text>
-<text x="42" y="939" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="400" fill="#9198a1" text-anchor="start">Reviewers never see who produced the submission, or what anyone else concluded.</text>
-<rect x="42" y="952" width="258" height="106" rx="8" fill="#0d1d33" stroke="#3d444d" stroke-width="1"/>
-<rect x="42" y="952" width="3.2" height="106" rx="1.6" fill="#58a6ff"/>
-<text x="57" y="976.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="12.5" font-weight="600" fill="#e6edf3" text-anchor="start">Elasticsearch</text>
-<text x="57" y="993.0" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="400" fill="#9198a1" text-anchor="start">Run-scoped index of the</text>
-<text x="57" y="1005.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="400" fill="#9198a1" text-anchor="start">retrieved page text.</text>
-<text x="57" y="1021.3" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="9.8" font-weight="400" fill="#6d757e" text-anchor="start">BM25 + dense vectors, RRF</text>
-<text x="57" y="1034.1" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="9.8" font-weight="400" fill="#6d757e" text-anchor="start">ES|QL over the run</text>
-<rect x="316" y="952" width="192.0" height="50" rx="8" fill="#0d1117" stroke="#3d444d" stroke-width="1"/>
-<rect x="316" y="952" width="3.2" height="50" rx="1.6" fill="#58a6ff"/>
-<text x="329" y="974" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="12" font-weight="600" fill="#e6edf3" text-anchor="start">Judge A</text>
-<text x="329" y="987" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10" font-weight="400" fill="#9198a1" text-anchor="start">factual review</text>
-<rect x="520.0" y="952" width="192.0" height="50" rx="8" fill="#0d1117" stroke="#3d444d" stroke-width="1"/>
-<rect x="520.0" y="952" width="3.2" height="50" rx="1.6" fill="#58a6ff"/>
-<text x="533.0" y="974" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="12" font-weight="600" fill="#e6edf3" text-anchor="start">Judge B</text>
-<text x="533.0" y="987" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10" font-weight="400" fill="#9198a1" text-anchor="start">adversarial review</text>
-<line x1="514.0" y1="1002" x2="514.0" y2="1016" stroke="#58a6ff" stroke-width="1.6" marker-end="url(#a)"/>
-<rect x="316" y="1016" width="396" height="42" rx="8" fill="#0d1117" stroke="#3d444d" stroke-width="1"/>
-<rect x="316" y="1016" width="3.2" height="42" rx="1.6" fill="#58a6ff"/>
-<text x="328" y="1036.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="11.5" font-weight="600" fill="#e6edf3" text-anchor="start">Resolver</text>
-<text x="328" y="1049.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10" font-weight="400" fill="#9198a1" text-anchor="start">consensus, or a structured tiebreak when they disagree</text>
-<rect x="730" y="952" width="262" height="106" rx="8" fill="#0d1d33" stroke="#3d444d" stroke-width="1"/>
-<rect x="730" y="952" width="3.2" height="106" rx="1.6" fill="#58a6ff"/>
-<text x="745" y="976.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="12.5" font-weight="600" fill="#e6edf3" text-anchor="start">GPTZero</text>
-<text x="745" y="993.0" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="400" fill="#9198a1" text-anchor="start">Bibliography scan on the</text>
-<text x="745" y="1005.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="400" fill="#9198a1" text-anchor="start">written answer.</text>
-<text x="745" y="1021.3" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="9.8" font-weight="400" fill="#6d757e" text-anchor="start">citation_exists.status</text>
-<text x="745" y="1034.1" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="9.8" font-weight="400" fill="#6d757e" text-anchor="start">claim_reference.has_reference</text>
-<rect x="42" y="1076" width="950" height="44" rx="8" fill="#0d1117" stroke="#3d444d" stroke-width="1"/>
-<rect x="42" y="1076" width="3.2" height="44" rx="1.6" fill="#d29922"/>
-<text x="60" y="1096" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="12.5" font-weight="600" fill="#e6edf3" text-anchor="start">Payment gate</text>
-<text x="156" y="1096" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="400" fill="#9198a1" text-anchor="start">every hard check must pass — at least one verifiable citation, no fabricated source, no unsupported claim</text>
-<text x="60" y="1112" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="400" fill="#6d757e" text-anchor="start">Credit is pro-rata across the sub-claims, so a partly-correct answer is partly paid.</text>
-<line x1="517.0" y1="1138" x2="517.0" y2="1160" stroke="#6d757e" stroke-width="1.5" stroke-linecap="round"/>
-<path d="M 517.0 1160 L 299.0 1160 L 299.0 1184" fill="none" stroke="#3fb950" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#aok)"/>
-<path d="M 517.0 1160 L 735.0 1160 L 735.0 1184" fill="none" stroke="#f85149" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#abad)"/>
-<text x="287.0" y="1176" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="10" font-weight="600" fill="#3fb950" text-anchor="end">pass</text>
-<text x="747.0" y="1176" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="10" font-weight="600" fill="#f85149" text-anchor="start">fail</text>
-<rect x="101.0" y="1184" width="396" height="62" rx="8" fill="#12261a" stroke="#3fb950" stroke-width="1"/>
-<text x="119.0" y="1210" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="13" font-weight="700" fill="#3fb950" text-anchor="start">Release</text>
-<text x="119.0" y="1230" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="400" fill="#9198a1" text-anchor="start">Lamports transfer to that seller slot</text>
-<rect x="537.0" y="1184" width="396" height="62" rx="8" fill="#2a1416" stroke="#f85149" stroke-width="1"/>
-<text x="555.0" y="1210" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="13" font-weight="700" fill="#f85149" text-anchor="start">Return</text>
-<text x="555.0" y="1230" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="400" fill="#9198a1" text-anchor="start">Nothing moves; the buyer keeps the amount</text>
-<path d="M 299.0 1246 L 299.0 1264 L 517.0 1264 L 517.0 1280" fill="none" stroke="#3fb950" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#aok)"/>
-<path d="M 735.0 1246 L 735.0 1264 L 517.0 1264" fill="none" stroke="#f85149" stroke-width="1.6" stroke-linejoin="round"/>
-<rect x="24" y="1280" width="986" height="62" rx="10" fill="#0d1117" stroke="#3fb950" stroke-width="1"/>
-<rect x="24" y="1280" width="3.2" height="62" rx="1.6" fill="#3fb950"/>
-<text x="44" y="1306" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="13" font-weight="700" fill="#e6edf3" text-anchor="start">Solana devnet</text>
-<text x="44" y="1326" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="400" fill="#9198a1" text-anchor="start">One transaction per seller slot. The memo carries the hash of the verification that authorised it.</text>
-<text x="990" y="1306" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="10" font-weight="400" fill="#6d757e" text-anchor="end">escrow program written, not deployed</text>
-<text x="990" y="1326" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="10" font-weight="400" fill="#6d757e" text-anchor="end">the chain records the decision, it does not enforce it</text>
-<rect x="1026" y="58" width="130" height="1284" rx="12" fill="#151b23" stroke="#a78bfa" stroke-width="1" stroke-dasharray="5 5" opacity="0.85"/>
-<g transform="translate(1091.0,700.0) rotate(-90)">
+<line x1="517.0" y1="430" x2="517.0" y2="456" stroke="#d29922" stroke-width="1.6" marker-end="url(#a)"/>
+<text x="527.0" y="448" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="10" font-weight="400" fill="#6d757e" text-anchor="start">a document, not a claim</text>
+<rect x="24" y="456" width="986" height="230" rx="12" fill="#151b23" stroke="#2c333b" stroke-width="1"/>
+<text x="42" y="480" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="700" fill="#6d757e" text-anchor="start" letter-spacing="1.4">DOCUMENT INTAKE</text>
+<text x="42" y="497" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="400" fill="#9198a1" text-anchor="start">Only for an audit. A typed claim skips this entirely and goes straight to the panel.</text>
+<rect x="42" y="510" width="307.3333333333333" height="62" rx="8" fill="#241c0c" stroke="#3d444d" stroke-width="1"/>
+<rect x="42" y="510" width="3.2" height="62" rx="1.6" fill="#d29922"/>
+<text x="56" y="533.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="12.5" font-weight="600" fill="#e6edf3" text-anchor="start">Extract</text>
+<text x="56" y="547.8" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.3" font-weight="400" fill="#9198a1" text-anchor="start">Pull every assertion out of the prose,</text>
+<text x="56" y="560.0999999999999" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.3" font-weight="400" fill="#9198a1" text-anchor="start">resolving pronouns so each stands alone</text>
+<rect x="363.3333333333333" y="510" width="307.3333333333333" height="62" rx="8" fill="#241c0c" stroke="#3d444d" stroke-width="1"/>
+<rect x="363.3333333333333" y="510" width="3.2" height="62" rx="1.6" fill="#d29922"/>
+<text x="377.3333333333333" y="533.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="12.5" font-weight="600" fill="#e6edf3" text-anchor="start">Classify</text>
+<text x="377.3333333333333" y="547.8" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.3" font-weight="400" fill="#9198a1" text-anchor="start">Researchable, or opinion, forecast, or too</text>
+<text x="377.3333333333333" y="560.0999999999999" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.3" font-weight="400" fill="#9198a1" text-anchor="start">under-specified to check</text>
+<rect x="684.6666666666666" y="510" width="307.3333333333333" height="62" rx="8" fill="#0d1d33" stroke="#3d444d" stroke-width="1"/>
+<rect x="684.6666666666666" y="510" width="3.2" height="62" rx="1.6" fill="#58a6ff"/>
+<text x="698.6666666666666" y="533.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="12.5" font-weight="600" fill="#e6edf3" text-anchor="start">Reconcile internally</text>
+<text x="698.6666666666666" y="547.8" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.3" font-weight="400" fill="#9198a1" text-anchor="start">Read the assertions against each other,</text>
+<text x="698.6666666666666" y="560.0999999999999" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.3" font-weight="400" fill="#9198a1" text-anchor="start">before any research is paid for</text>
+<rect x="42" y="588" width="228.5" height="46" rx="8" fill="#2a1416" stroke="#3d444d" stroke-width="1"/>
+<circle cx="57" cy="606" r="4" fill="#f85149"/>
+<text x="68" y="610" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="10" font-weight="600" fill="#f85149" text-anchor="start">numeric mismatch</text>
+<text x="55" y="625" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="9.3" font-weight="400" fill="#9198a1" text-anchor="start">a figure its own numbers contradict</text>
+<rect x="282.5" y="588" width="228.5" height="46" rx="8" fill="#2a1416" stroke="#3d444d" stroke-width="1"/>
+<circle cx="297.5" cy="606" r="4" fill="#f85149"/>
+<text x="308.5" y="610" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="10" font-weight="600" fill="#f85149" text-anchor="start">contradiction</text>
+<text x="295.5" y="625" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="9.3" font-weight="400" fill="#9198a1" text-anchor="start">two assertions that cannot both hold</text>
+<rect x="523.0" y="588" width="228.5" height="46" rx="8" fill="#241c0c" stroke="#3d444d" stroke-width="1"/>
+<circle cx="538.0" cy="606" r="4" fill="#d29922"/>
+<text x="549.0" y="610" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="10" font-weight="600" fill="#d29922" text-anchor="start">date conflict</text>
+<text x="536.0" y="625" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="9.3" font-weight="400" fill="#9198a1" text-anchor="start">one event, two dates</text>
+<rect x="763.5" y="588" width="228.5" height="46" rx="8" fill="#1c232b" stroke="#3d444d" stroke-width="1"/>
+<circle cx="778.5" cy="606" r="4" fill="#6d757e"/>
+<text x="789.5" y="610" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="10" font-weight="600" fill="#6d757e" text-anchor="start">basis undefined</text>
+<text x="776.5" y="625" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="9.3" font-weight="400" fill="#9198a1" text-anchor="start">a figure with no stated basis</text>
+<text x="42" y="658" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.3" font-weight="400" fill="#9198a1" text-anchor="start">The model proposes these findings; code verifies them. A numeric mismatch whose own two figures agree is discarded, and so is any</text>
+<text x="42" y="673" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.3" font-weight="400" fill="#9198a1" text-anchor="start">reference to an assertion the document never made. Reported, never gated — the sellers did not write the document.</text>
+<line x1="517.0" y1="686" x2="517.0" y2="712" stroke="#a371f7" stroke-width="1.6" marker-end="url(#a)"/>
+<text x="527.0" y="704" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="10" font-weight="400" fill="#6d757e" text-anchor="start">researchable assertions only</text>
+<rect x="24" y="712" width="986" height="176" rx="12" fill="#151b23" stroke="#2c333b" stroke-width="1"/>
+<text x="42" y="736" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="700" fill="#6d757e" text-anchor="start" letter-spacing="1.4">RESEARCH PANEL</text>
+<text x="42" y="753" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="400" fill="#9198a1" text-anchor="start">Four models, four research strategies, separate tool budgets — one provider, so this is strategy diversity, not model-family independence.</text>
+<rect x="42" y="766" width="227.0" height="92" rx="8" fill="#1b1229" stroke="#3d444d" stroke-width="1"/>
+<rect x="42" y="766" width="3.2" height="92" rx="1.6" fill="#a371f7"/>
+<text x="57" y="787" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="9" font-weight="700" fill="#a371f7" text-anchor="start">AGENT 1</text>
+<text x="57" y="804" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="12" font-weight="600" fill="#e6edf3" text-anchor="start">gpt-4.1-mini</text>
+<text x="57" y="820.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="400" fill="#9198a1" text-anchor="start">Primary and official sources only</text>
+<text x="57" y="833.0" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="9.5" font-weight="400" fill="#6d757e" text-anchor="start">6 tool calls · temp 0.2</text>
+<rect x="283.0" y="766" width="227.0" height="92" rx="8" fill="#1b1229" stroke="#3d444d" stroke-width="1"/>
+<rect x="283.0" y="766" width="3.2" height="92" rx="1.6" fill="#a371f7"/>
+<text x="298.0" y="787" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="9" font-weight="700" fill="#a371f7" text-anchor="start">AGENT 2</text>
+<text x="298.0" y="804" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="12" font-weight="600" fill="#e6edf3" text-anchor="start">gpt-4o-mini</text>
+<text x="298.0" y="820.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="400" fill="#9198a1" text-anchor="start">Audits every number, date and unit</text>
+<text x="298.0" y="833.0" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="9.5" font-weight="400" fill="#6d757e" text-anchor="start">8 tool calls · temp 0.8</text>
+<rect x="524.0" y="766" width="227.0" height="92" rx="8" fill="#1b1229" stroke="#3d444d" stroke-width="1"/>
+<rect x="524.0" y="766" width="3.2" height="92" rx="1.6" fill="#a371f7"/>
+<text x="539.0" y="787" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="9" font-weight="700" fill="#a371f7" text-anchor="start">AGENT 3</text>
+<text x="539.0" y="804" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="12" font-weight="600" fill="#e6edf3" text-anchor="start">gpt-5-mini</text>
+<text x="539.0" y="820.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="400" fill="#9198a1" text-anchor="start">Independent, unaffiliated corroboration</text>
+<text x="539.0" y="833.0" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="9.5" font-weight="400" fill="#6d757e" text-anchor="start">8 tool calls</text>
+<rect x="765.0" y="766" width="227.0" height="92" rx="8" fill="#1b1229" stroke="#3d444d" stroke-width="1"/>
+<rect x="765.0" y="766" width="3.2" height="92" rx="1.6" fill="#a371f7"/>
+<text x="780.0" y="787" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="9" font-weight="700" fill="#a371f7" text-anchor="start">AGENT 4</text>
+<text x="780.0" y="804" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="12" font-weight="600" fill="#e6edf3" text-anchor="start">gpt-4o</text>
+<text x="780.0" y="820.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="400" fill="#9198a1" text-anchor="start">Adversarial: searches for the refutation</text>
+<text x="780.0" y="833.0" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="9.5" font-weight="400" fill="#6d757e" text-anchor="start">10 tool calls · temp 0.6</text>
+<text x="42" y="874" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="400" fill="#9198a1" text-anchor="start">Each seller runs the Responses API with web search and returns a verdict, per-sub-claim answers, sources and exact quotes. 2–4 are staffed per task. Nothing they say is trusted yet.</text>
+<line x1="517.0" y1="888" x2="517.0" y2="914" stroke="#d29922" stroke-width="1.6" marker-end="url(#a)"/>
+<text x="527.0" y="906" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="10" font-weight="400" fill="#6d757e" text-anchor="start">claim · sources · quotes</text>
+<rect x="24" y="914" width="986" height="214" rx="12" fill="#151b23" stroke="#2c333b" stroke-width="1"/>
+<text x="42" y="938" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="700" fill="#6d757e" text-anchor="start" letter-spacing="1.4">EVIDENCE PIPELINE</text>
+<text x="42" y="955" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="400" fill="#9198a1" text-anchor="start">Runs server-side, outside the agents’ control. Deterministic code, no model in the loop.</text>
+<rect x="42" y="968" width="307.3333333333333" height="56" rx="8" fill="#241c0c" stroke="#3d444d" stroke-width="1"/>
+<rect x="42" y="968" width="3.2" height="56" rx="1.6" fill="#d29922"/>
+<text x="56" y="991.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="12.5" font-weight="600" fill="#e6edf3" text-anchor="start">Retrieve</text>
+<text x="56" y="1006.0" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="400" fill="#9198a1" text-anchor="start">Fetch every cited URL, extract text, hash it, index it</text>
+<rect x="363.3333333333333" y="968" width="307.3333333333333" height="56" rx="8" fill="#241c0c" stroke="#3d444d" stroke-width="1"/>
+<rect x="363.3333333333333" y="968" width="3.2" height="56" rx="1.6" fill="#d29922"/>
+<text x="377.3333333333333" y="991.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="12.5" font-weight="600" fill="#e6edf3" text-anchor="start">Ground</text>
+<text x="377.3333333333333" y="1006.0" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="400" fill="#9198a1" text-anchor="start">Quote must reach 0.75 three-gram containment in that page</text>
+<rect x="684.6666666666666" y="968" width="307.3333333333333" height="56" rx="8" fill="#241c0c" stroke="#3d444d" stroke-width="1"/>
+<rect x="684.6666666666666" y="968" width="3.2" height="56" rx="1.6" fill="#d29922"/>
+<text x="698.6666666666666" y="991.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="12.5" font-weight="600" fill="#e6edf3" text-anchor="start">Blind</text>
+<text x="698.6666666666666" y="1006.0" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="400" fill="#9198a1" text-anchor="start">Strip seller identity, sort sources, shuffle review order</text>
+<rect x="42" y="1040" width="228.5" height="52" rx="8" fill="#12261a" stroke="#3d444d" stroke-width="1"/>
+<circle cx="57" cy="1060" r="4" fill="#3fb950"/>
+<text x="68" y="1064" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="11" font-weight="600" fill="#3fb950" text-anchor="start">grounded</text>
+<text x="55" y="1081" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="9.8" font-weight="400" fill="#9198a1" text-anchor="start">quote found — counts toward payment</text>
+<rect x="282.5" y="1040" width="228.5" height="52" rx="8" fill="#241c0c" stroke="#3d444d" stroke-width="1"/>
+<circle cx="297.5" cy="1060" r="4" fill="#d29922"/>
+<text x="308.5" y="1064" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="11" font-weight="600" fill="#d29922" text-anchor="start">contradicted</text>
+<text x="295.5" y="1081" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="9.8" font-weight="400" fill="#9198a1" text-anchor="start">page real, quote absent — no credit</text>
+<rect x="523.0" y="1040" width="228.5" height="52" rx="8" fill="#2a1416" stroke="#3d444d" stroke-width="1"/>
+<circle cx="538.0" cy="1060" r="4" fill="#f85149"/>
+<text x="549.0" y="1064" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="11" font-weight="600" fill="#f85149" text-anchor="start">nonexistent</text>
+<text x="536.0" y="1081" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="9.8" font-weight="400" fill="#9198a1" text-anchor="start">404 — fabrication, vetoes the payout</text>
+<rect x="763.5" y="1040" width="228.5" height="52" rx="8" fill="#1c232b" stroke="#3d444d" stroke-width="1"/>
+<circle cx="778.5" cy="1060" r="4" fill="#6d757e"/>
+<text x="789.5" y="1064" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="11" font-weight="600" fill="#6d757e" text-anchor="start">unverifiable</text>
+<text x="776.5" y="1081" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="9.8" font-weight="400" fill="#9198a1" text-anchor="start">403 or PDF — not held against the seller</text>
+<text x="42" y="1114" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="400" fill="#9198a1" text-anchor="start">A 404 is fraud; a 403 or a PDF is infrastructure. Separating the two is why honest sellers still get paid.</text>
+<line x1="517.0" y1="1128" x2="517.0" y2="1154" stroke="#58a6ff" stroke-width="1.6" marker-end="url(#a)"/>
+<rect x="24" y="1154" width="986" height="240" rx="12" fill="#151b23" stroke="#2c333b" stroke-width="1"/>
+<text x="42" y="1178" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="700" fill="#6d757e" text-anchor="start" letter-spacing="1.4">BLIND VERIFICATION</text>
+<text x="42" y="1195" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="400" fill="#9198a1" text-anchor="start">Reviewers never see who produced the submission, or what anyone else concluded.</text>
+<rect x="42" y="1208" width="258" height="106" rx="8" fill="#0d1d33" stroke="#3d444d" stroke-width="1"/>
+<rect x="42" y="1208" width="3.2" height="106" rx="1.6" fill="#58a6ff"/>
+<text x="57" y="1232.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="12.5" font-weight="600" fill="#e6edf3" text-anchor="start">Elasticsearch</text>
+<text x="57" y="1249.0" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="400" fill="#9198a1" text-anchor="start">Run-scoped index of the</text>
+<text x="57" y="1261.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="400" fill="#9198a1" text-anchor="start">retrieved page text.</text>
+<text x="57" y="1277.3" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="9.8" font-weight="400" fill="#6d757e" text-anchor="start">BM25 + dense vectors, RRF</text>
+<text x="57" y="1290.1" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="9.8" font-weight="400" fill="#6d757e" text-anchor="start">ES|QL over the run</text>
+<rect x="316" y="1208" width="192.0" height="50" rx="8" fill="#0d1117" stroke="#3d444d" stroke-width="1"/>
+<rect x="316" y="1208" width="3.2" height="50" rx="1.6" fill="#58a6ff"/>
+<text x="329" y="1230" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="12" font-weight="600" fill="#e6edf3" text-anchor="start">Judge A</text>
+<text x="329" y="1243" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10" font-weight="400" fill="#9198a1" text-anchor="start">factual review</text>
+<rect x="520.0" y="1208" width="192.0" height="50" rx="8" fill="#0d1117" stroke="#3d444d" stroke-width="1"/>
+<rect x="520.0" y="1208" width="3.2" height="50" rx="1.6" fill="#58a6ff"/>
+<text x="533.0" y="1230" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="12" font-weight="600" fill="#e6edf3" text-anchor="start">Judge B</text>
+<text x="533.0" y="1243" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10" font-weight="400" fill="#9198a1" text-anchor="start">adversarial review</text>
+<line x1="514.0" y1="1258" x2="514.0" y2="1272" stroke="#58a6ff" stroke-width="1.6" marker-end="url(#a)"/>
+<rect x="316" y="1272" width="396" height="42" rx="8" fill="#0d1117" stroke="#3d444d" stroke-width="1"/>
+<rect x="316" y="1272" width="3.2" height="42" rx="1.6" fill="#58a6ff"/>
+<text x="328" y="1292.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="11.5" font-weight="600" fill="#e6edf3" text-anchor="start">Resolver</text>
+<text x="328" y="1305.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10" font-weight="400" fill="#9198a1" text-anchor="start">consensus, or a structured tiebreak when they disagree</text>
+<rect x="730" y="1208" width="262" height="106" rx="8" fill="#0d1d33" stroke="#3d444d" stroke-width="1"/>
+<rect x="730" y="1208" width="3.2" height="106" rx="1.6" fill="#58a6ff"/>
+<text x="745" y="1232.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="12.5" font-weight="600" fill="#e6edf3" text-anchor="start">GPTZero</text>
+<text x="745" y="1249.0" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="400" fill="#9198a1" text-anchor="start">Bibliography scan on the</text>
+<text x="745" y="1261.5" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="400" fill="#9198a1" text-anchor="start">written answer.</text>
+<text x="745" y="1277.3" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="9.8" font-weight="400" fill="#6d757e" text-anchor="start">citation_exists.status</text>
+<text x="745" y="1290.1" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="9.8" font-weight="400" fill="#6d757e" text-anchor="start">claim_reference.has_reference</text>
+<rect x="42" y="1332" width="950" height="44" rx="8" fill="#0d1117" stroke="#3d444d" stroke-width="1"/>
+<rect x="42" y="1332" width="3.2" height="44" rx="1.6" fill="#d29922"/>
+<text x="60" y="1352" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="12.5" font-weight="600" fill="#e6edf3" text-anchor="start">Payment gate</text>
+<text x="156" y="1352" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="400" fill="#9198a1" text-anchor="start">every hard check must pass — at least one verifiable citation, no fabricated source, no unsupported claim</text>
+<text x="60" y="1368" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="400" fill="#6d757e" text-anchor="start">Credit is pro-rata across the sub-claims, so a partly-correct answer is partly paid.</text>
+<line x1="517.0" y1="1394" x2="517.0" y2="1416" stroke="#6d757e" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M 517.0 1416 L 299.0 1416 L 299.0 1440" fill="none" stroke="#3fb950" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#aok)"/>
+<path d="M 517.0 1416 L 735.0 1416 L 735.0 1440" fill="none" stroke="#f85149" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#abad)"/>
+<text x="287.0" y="1432" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="10" font-weight="600" fill="#3fb950" text-anchor="end">pass</text>
+<text x="747.0" y="1432" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="10" font-weight="600" fill="#f85149" text-anchor="start">fail</text>
+<rect x="101.0" y="1440" width="396" height="62" rx="8" fill="#12261a" stroke="#3fb950" stroke-width="1"/>
+<text x="119.0" y="1466" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="13" font-weight="700" fill="#3fb950" text-anchor="start">Release</text>
+<text x="119.0" y="1486" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="400" fill="#9198a1" text-anchor="start">Lamports transfer to that seller slot</text>
+<rect x="537.0" y="1440" width="396" height="62" rx="8" fill="#2a1416" stroke="#f85149" stroke-width="1"/>
+<text x="555.0" y="1466" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="13" font-weight="700" fill="#f85149" text-anchor="start">Return</text>
+<text x="555.0" y="1486" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="400" fill="#9198a1" text-anchor="start">Nothing moves; the buyer keeps the amount</text>
+<path d="M 299.0 1502 L 299.0 1520 L 517.0 1520 L 517.0 1536" fill="none" stroke="#3fb950" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#aok)"/>
+<path d="M 735.0 1502 L 735.0 1520 L 517.0 1520" fill="none" stroke="#f85149" stroke-width="1.6" stroke-linejoin="round"/>
+<rect x="24" y="1536" width="986" height="62" rx="10" fill="#0d1117" stroke="#3fb950" stroke-width="1"/>
+<rect x="24" y="1536" width="3.2" height="62" rx="1.6" fill="#3fb950"/>
+<text x="44" y="1562" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="13" font-weight="700" fill="#e6edf3" text-anchor="start">Solana devnet</text>
+<text x="44" y="1582" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="400" fill="#9198a1" text-anchor="start">One transaction per seller slot. The memo carries the hash of the verification that authorised it.</text>
+<text x="990" y="1562" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="10" font-weight="400" fill="#6d757e" text-anchor="end">escrow program written, not deployed</text>
+<text x="990" y="1582" font-family="'SF Mono',Menlo,'Courier New',monospace" font-size="10" font-weight="400" fill="#6d757e" text-anchor="end">the chain records the decision, it does not enforce it</text>
+<rect x="1026" y="58" width="130" height="1540" rx="12" fill="#151b23" stroke="#a78bfa" stroke-width="1" stroke-dasharray="5 5" opacity="0.85"/>
+<g transform="translate(1091.0,828.0) rotate(-90)">
 <text x="0" y="-22" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="13" font-weight="700" fill="#a78bfa" text-anchor="middle" letter-spacing="3">SENTRY</text>
 <text x="0" y="0" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="400" fill="#9198a1" text-anchor="middle">One distributed trace per task · spans stitched across alarm restarts</text>
 <text x="0" y="18" font-family="-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="400" fill="#9198a1" text-anchor="middle">Errors, releases from CF_VERSION_METADATA, Worker + browser source maps</text>
@@ -202,8 +241,9 @@
 <line x1="1010" y1="97" x2="1026" y2="97" stroke="#a78bfa" stroke-width="1" stroke-linecap="round" stroke-dasharray="3 4"/>
 <line x1="1010" y1="296" x2="1026" y2="296" stroke="#a78bfa" stroke-width="1" stroke-linecap="round" stroke-dasharray="3 4"/>
 <line x1="1010" y1="544" x2="1026" y2="544" stroke="#a78bfa" stroke-width="1" stroke-linecap="round" stroke-dasharray="3 4"/>
-<line x1="1010" y1="765" x2="1026" y2="765" stroke="#a78bfa" stroke-width="1" stroke-linecap="round" stroke-dasharray="3 4"/>
-<line x1="1010" y1="1010" x2="1026" y2="1010" stroke="#a78bfa" stroke-width="1" stroke-linecap="round" stroke-dasharray="3 4"/>
-<line x1="1010" y1="1215" x2="1026" y2="1215" stroke="#a78bfa" stroke-width="1" stroke-linecap="round" stroke-dasharray="3 4"/>
-<line x1="1010" y1="1311" x2="1026" y2="1311" stroke="#a78bfa" stroke-width="1" stroke-linecap="round" stroke-dasharray="3 4"/>
+<line x1="1010" y1="800" x2="1026" y2="800" stroke="#a78bfa" stroke-width="1" stroke-linecap="round" stroke-dasharray="3 4"/>
+<line x1="1010" y1="1021" x2="1026" y2="1021" stroke="#a78bfa" stroke-width="1" stroke-linecap="round" stroke-dasharray="3 4"/>
+<line x1="1010" y1="1266" x2="1026" y2="1266" stroke="#a78bfa" stroke-width="1" stroke-linecap="round" stroke-dasharray="3 4"/>
+<line x1="1010" y1="1471" x2="1026" y2="1471" stroke="#a78bfa" stroke-width="1" stroke-linecap="round" stroke-dasharray="3 4"/>
+<line x1="1010" y1="1567" x2="1026" y2="1567" stroke="#a78bfa" stroke-width="1" stroke-linecap="round" stroke-dasharray="3 4"/>
 </svg>

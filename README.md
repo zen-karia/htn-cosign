@@ -1,22 +1,46 @@
 # Cosign
 
-**Agents paying other agents to verify whether agents are lying — and nobody gets paid until two independent judges cosign the work.**
+**Cosign treats its own AI agents as untrusted input, and checks them with code.**
 
-Cosign is a verify-then-settle layer for agent-to-agent commerce, demonstrated through fact-checking. The Verification Desk performs live research and verification, then settles on Solana devnet: a release transfers lamports to the seller and a refusal moves nothing, each carrying the hash of the verification that authorised it in a transaction memo. The Anchor escrow program in `programs/cosign-escrow/` is written but not deployed, so the chain records the decision rather than enforcing it.
+Give it a document and it does two things. First it reads the document against itself and reports where it disagrees: a stated percentage its own figures contradict, two sections that cannot both be true, the same event dated twice. No search engine can settle those — only comparing the document's claims to each other can. Then it sends what remains to independent research agents, retrieves every source they cite, and pays them only for the parts it can verify.
 
-Payment rails such as x402 authorize and settle payments before establishing whether delivered work is correct or in scope. They leave a gap for “the payment was valid, but the work was wrong.” Cosign closes that gap with a machine-checkable rubric, independent reviews grounded in indexed documents, and structured dispute evidence. Verification and conflict resolution are the product; there is no bidding, discovery, or reputation system.
+Give it a single claim instead and it does the second half alone.
+
+The gap it closes: payment rails such as x402 authorise and settle before establishing whether the delivered work was correct or in scope. They leave "the payment was valid, but the work was wrong." Cosign settles on Solana devnet only against evidence it retrieved itself — a release transfers lamports, a refusal moves nothing, and each transaction memo carries the hash of the verification that authorised it. The Anchor escrow program in `programs/cosign-escrow/` is written but not deployed, so the chain records the decision rather than enforcing it.
+
+## Document audit
+
+Upload a PDF, TXT, MD, CSV, JSON or HTML file, up to 60,000 characters. PDFs are extracted by the Worker with `unpdf`; everything else is read in the browser.
+
+Extraction pulls every factual assertion out of the prose, resolves pronouns so each one stands alone, and sorts it into what can be researched and what cannot — opinion, forecast, or a figure too under-specified to check. The unresearchable ones are reported rather than dropped: what a document asserts without being checkable is a finding about the document.
+
+Then `src/core/consistency.ts` reads the assertions as a set. The model proposes conflicts and code decides which survive: for a numeric mismatch the model must report both the figure the document states and the figure its own other numbers imply, and a finding whose two values agree is discarded however confidently it was worded. References to assertions that do not exist are discarded too.
+
+Findings are reported, never gated. A document contradicting itself says nothing about the sellers, who did not write it, so settlement is untouched — a test pins a conflicted run and a clean run to the same payout. The check is also non-blocking: if it is unavailable the run continues and says so.
+
+`docs/samples/programme-review.pdf` is a sample built to exercise every path — eight checkable facts, two statements too vague to research, two opinions, and three planted inconsistencies covering each kind the pass reports.
 
 ## Current evidence
 
-The local application uses a real Cloudflare Worker and SQLite Durable Objects through Wrangler. The main desk now creates explicit `live` tasks: it classifies verifiability, launches 2–4 Responses API sellers with web search, each on a different model with its own research strategy and search budget (see `src/core/agents.ts`; they remain one provider, so this is strategy diversity rather than model-family independence), retrieves their URLs server-side, hashes and indexes extracted text in a run-scoped Elastic index, runs two fresh blind judges per submission, reconciles conflicts, settles each seller slot on devnet from the actual results, and persists the full run.
+The application runs on a real Cloudflare Worker with SQLite Durable Objects. A live task classifies verifiability, launches 2–4 Responses API sellers with web search — each on a different model with its own research strategy and search budget (`src/core/agents.ts`; one provider, so this is strategy diversity rather than model-family independence) — retrieves their URLs server-side, hashes and indexes the extracted text in a run-scoped Elastic index, runs two fresh blind judges per submission, reconciles conflicts, and settles each slot on devnet from the actual results.
 
-A live deployed run settles on devnet end to end: sellers research, sources are retrieved and indexed, judges review blind, and each slot is paid or returned in its own transaction carrying the verification evidence hash. Two findings from live running are worth stating plainly. Both judges have approved a submission built on a source that does not exist — `home.cern/energy/energy/`, invented by the seller and returning 404 — which the grounding gate rejected; that is the case the deterministic checks exist for. And a seller lens that asks for counter-evidence drove one model to cite plausible URLs recalled from training rather than pages it opened, which is why citations are now checked against the search tool's own record of what was read. Demo Replay remains the only fixture-backed UI mode. [PROGRESS.md](PROGRESS.md) records details.
+Four findings from running it live are worth stating plainly.
+
+**Both judges approved a fabricated source.** A seller cited `home.cern/energy/energy/`, which it invented and which returns 404. Both LLM judges passed it; the deterministic grounding gate rejected it. That is the case the non-model checks exist for.
+
+**A lens asking for counter-evidence produced citations from memory.** One model returned plausible URLs recalled from training rather than pages it opened, so citations are now bound to the search tool's own record of what was read.
+
+**An audit found a contradiction its own researchers later confirmed.** On `docs/samples/programme-review.pdf` the consistency pass rejected a stated 1,200 percent cost overrun before any research, because the document's own $10.0B and $1.0B figures give 900. The research agents, which never saw that finding, independently refuted the same figure.
+
+**Rate limits, not bad models, were stalling runs.** An audit stalled at HTTP 429 with 7 of 16 deliveries verified. Transient statuses are now retried with backoff that honours `Retry-After`, and audits judge fewer deliveries per alarm.
+
+Demo Replay remains the only fixture-backed UI mode. [PROGRESS.md](PROGRESS.md) records details.
 
 ## Architecture
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.png">
-  <img src="docs/architecture-light.png" alt="Cosign architecture. A React dashboard calls a Cloudflare Worker, which gives every task its own SQLite Durable Object running an alarm-driven phase machine: classify, initialize, decompose, sellers, verify, reconcile, settle, complete. The task staffs a panel of independent research agents on different models with different research strategies, then a server-side evidence pipeline retrieves, grounds and blinds everything they cite, sorting each citation into grounded, contradicted, nonexistent or unverifiable. Elasticsearch, two blind judges, a resolver and a GPTZero bibliography scan feed a payment gate that releases lamports to the seller or returns them to the buyer, settling on Solana devnet with the verification hash in the transaction memo. Sentry traces the whole run.">
+  <img src="docs/architecture-light.png" alt="Cosign architecture. A React dashboard calls a Cloudflare Worker, which gives every task its own SQLite Durable Object running an alarm-driven phase machine. A document audit first goes through intake: every assertion is extracted from the prose, classified as researchable or as opinion, forecast or under-specified, and then read against the other assertions to find numeric mismatches, contradictions, date conflicts and undefined bases, which the model proposes and code verifies. Only researchable assertions reach the panel of independent research agents on different models. A server-side evidence pipeline then retrieves, grounds and blinds everything they cite, sorting each citation into grounded, contradicted, nonexistent or unverifiable. Elasticsearch, two blind judges, a resolver and a GPTZero bibliography scan feed a payment gate that releases lamports to the seller or returns them to the buyer, settling on Solana devnet with the verification hash in the transaction memo. Sentry traces the whole run.">
 </picture>
 
 The Worker is the backend, not a static simulation. Each task durably stores its phase, deliveries, reviews, disputes and receipts. Alarms resume work and retry unavailable services three times before pausing safely. The board has another Durable Object; KV supplies optional demo configuration.
@@ -134,12 +158,17 @@ Deployment requires `.tools/solana-release/bin/solana`, `.keys/program.json` and
 | Blind verification | `src/core/blind.ts`, `src/core/verify.ts` |
 | Sponsor clients | `src/services/` |
 | Research panel | `src/core/agents.ts` |
+| Document extraction | `Models.extractAssertions` in `src/services/models.ts` |
+| Internal consistency | `src/core/consistency.ts`, `Models.checkConsistency` |
+| PDF upload | `POST /api/extract` in `src/worker/index.ts`, `pdfText` in `src/services/evidence.ts` |
 | Failure wording | `src/core/criteria.ts` |
 | Harness-only labels | `src/harness/sellers.ts` |
 | Anchor escrow | `programs/cosign-escrow/` |
 | Dashboard | `src/web/` |
 | Tests | `tests/`, `scripts/e2e.ts` |
-| Diagnostics | `scripts/settlement-smoke.ts`, `scripts/agent-probe.ts` |
+| Diagnostics | `scripts/settlement-smoke.ts`, `scripts/agent-probe.ts`, `scripts/audit-probe.ts` |
+| Sample document | `docs/samples/programme-review.pdf` |
+| Architecture diagram | `docs/architecture.py` regenerates `docs/architecture-*.svg` |
 | Durable memory | `PROGRESS.md`, `ASSUMPTIONS.md`, `TODO.md` |
 
 Build runs TypeScript, Vite and a Cloudflare **dry run**, without publishing. HTTP end-to-end tests use actual Wrangler and SQLite Durable Objects.
