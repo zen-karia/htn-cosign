@@ -77,6 +77,21 @@ describe('document audit', () => {
     expect(task.deliveries).toHaveLength(pairs);
   });
 
+  // The panel decides "pending" from this, because reconciled_verdict is seeded to
+  // insufficient_evidence at creation and would otherwise read as a finished finding.
+  it('leaves a sub-claim without verdicts until reconcile has run', async () => {
+    const { task, engine } = audit();
+    vi.spyOn(engine.models, 'extractAssertions').mockResolvedValue(extraction([
+      { text: 'A checkable assertion about emissions.', kind: 'VERIFIABLE', reason: 'measurable' },
+    ]));
+    while (task.phase !== 'sellers') await engine.step();
+    expect(task.sub_claims[0].reconciled_verdict).toBe('insufficient_evidence');
+    expect(task.sub_claims[0].verdicts).toEqual([]);
+
+    while (task.phase !== 'complete') await engine.step();
+    expect(task.sub_claims[0].verdicts.length).toBeGreaterThan(0);
+  });
+
   it('leaves ordinary claim runs unbatched', async () => {
     const env = {};
     const task = createTask({ claim: COMPLEX_CLAIM, scenario: 'pool', decompose: true }, env);

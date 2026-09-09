@@ -149,9 +149,12 @@ export function AuditPanel({ task }: { task: Task }) {
   const conflicts = task.audit?.conflicts ?? [];
   const checkable = assertions.filter(item => item.kind === 'VERIFIABLE').length;
   const flagged = new Set(conflicts.flatMap(item => item.assertions));
+  // reconciled_verdict is seeded to insufficient_evidence when the sub-claim is created, so
+  // before reconcile has run it is a placeholder, not a finding. verdicts is empty until then.
   const verdictFor = (text: string) => {
     const claim = task.sub_claims.find(item => item.text === text);
-    return claim ? claim.resolution?.verdict ?? claim.reconciled_verdict : undefined;
+    if (!claim || !claim.verdicts.length) return undefined;
+    return claim.resolution?.verdict ?? claim.reconciled_verdict;
   };
   return <Card>
     <SectionHeader icon="◫" title="Document assertions" subtitle={`${checkable} of ${assertions.length} researchable; the rest are reported, not checked`} aside={conflicts.length ? <StatusBadge tone="danger">{conflicts.length} internal conflict{conflicts.length === 1 ? '' : 's'}</StatusBadge> : undefined}/>

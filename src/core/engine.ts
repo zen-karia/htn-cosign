@@ -15,6 +15,10 @@ import { EvidenceRetriever, canonicalUrl } from '../services/evidence';
 // Matches the four-per-alarm bound the verify phase uses, for the same reason: it keeps
 // external subrequests per alarm within the Worker's limit.
 const SELLER_BATCH = 4;
+// Each delivery costs two judge calls. An audit produces one delivery per assertion per seller,
+// so the same four-per-alarm bound that suits a claim run has been enough to draw an upstream
+// 429; an audit judges fewer at a time and takes more alarms instead.
+const AUDIT_VERIFY_BATCH = 2;
 
 export type Save = (task: Task) => Promise<void>;
 export type Span = <T>(name: string, action: () => Promise<T>) => Promise<T>;
@@ -210,7 +214,7 @@ export class Engine {
       case 'verify': {
         task.status = 'verifying'; await this.event('judge.started', 'Blind reviews started. Each submission is evaluated by two fresh independent judges.');
         // Four blind submissions per alarm bounds external subrequests even for 4 × 4 decomposition.
-        const results = await Promise.allSettled(shuffled(task.deliveries.filter(d => !d.verification)).slice(0, 4).map(async delivery => {
+        const results = await Promise.allSettled(shuffled(task.deliveries.filter(d => !d.verification)).slice(0, task.task_type === 'document_audit' ? AUDIT_VERIFY_BATCH : 4).map(async delivery => {
           const input = this.blind(delivery);
           try {
             const result = await verify(input, this.verification);
