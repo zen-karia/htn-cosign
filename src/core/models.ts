@@ -58,7 +58,8 @@ export const ConflictKind = z.enum(['numeric_mismatch', 'contradiction', 'date_c
 export type ConflictKind = z.infer<typeof ConflictKind>;
 export const ConsistencyReport = z.object({
   conflicts: z.array(z.object({
-    assertions: z.array(z.number().int().nonnegative()).min(1).max(4),
+    // Numbered from 1, matching how they are shown and how the model is asked to cite them.
+    assertions: z.array(z.number().int().min(1)).min(1).max(4),
     kind: ConflictKind,
     explanation: z.string().min(1).max(600),
     // Present for numeric_mismatch: what the document states, and what its own other figures

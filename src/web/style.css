@@ -545,3 +545,13 @@ th { color: var(--text-tertiary); font-size: 8px; text-transform: uppercase; }
 .conflict-list>div>p small { display: block; margin-top: 3px; color: var(--text-tertiary); font: 8.5px "SFMono-Regular", Consolas, monospace; }
 .conflict-list>div>b { color: var(--danger, #cf222e); font: 9px "SFMono-Regular", Consolas, monospace; }
 .assertion-list>div.flagged>span { color: var(--danger, #cf222e); font-weight: 700; }
+
+.analysis-body { padding: 0 15px 14px; }
+.analysis-body blockquote { margin: 0 0 9px; padding: 9px 11px; border-left: 2px solid var(--primary); border-radius: 0 7px 7px 0; background: var(--surface-blue); color: var(--text-primary); font-size: 10px; line-height: 1.55; }
+.analysis-body h3 { display: flex; align-items: center; gap: 6px; margin: 15px 0 7px; font-size: 10px; }
+.analysis-body h3 span { padding: 1px 6px; border-radius: 9px; background: var(--surface-red, #fdf2f3); color: var(--danger, #cf222e); font-size: 8.5px; }
+.analysis-body .conflict-list { padding: 0; }
+.analysis-note { margin: 0 0 4px; color: var(--text-tertiary); font-size: 9px; line-height: 1.5; }
+.analysis-note b { color: var(--text-secondary); }
+
+.claim-summary .document-size { margin: 4px 0 0; color: var(--text-tertiary); font-size: 9px; }

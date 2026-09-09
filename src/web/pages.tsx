@@ -96,6 +96,12 @@ function SettlementCard({ task }: { task?: Task }) {
   </Card>;
 }
 
+// A pasted or extracted document has no title field, so its opening sentence stands in for one.
+export function documentLabel(claim: string): string {
+  const head = claim.trim().split(/(?<=[.!?])\s/)[0] ?? claim.trim();
+  return head.length > 110 ? `${head.slice(0, 107).trimEnd()}\u2026` : head;
+}
+
 const TEXT_TYPES = ['.txt', '.md', '.markdown', '.csv', '.json', '.html', '.htm'];
 
 // A PDF goes to the Worker, which already runs unpdf for source retrieval. Everything else is
@@ -148,7 +154,7 @@ export function AuditPanel({ task }: { task: Task }) {
   const assertions = task.audit?.assertions ?? [];
   const conflicts = task.audit?.conflicts ?? [];
   const checkable = assertions.filter(item => item.kind === 'VERIFIABLE').length;
-  const flagged = new Set(conflicts.flatMap(item => item.assertions));
+  const flagged = new Set(conflicts.flatMap(item => item.assertions).map(number => number - 1));
   // reconciled_verdict is seeded to insufficient_evidence when the sub-claim is created, so
   // before reconcile has run it is a placeholder, not a finding. verdicts is empty until then.
   const verdictFor = (text: string) => {
@@ -163,7 +169,7 @@ export function AuditPanel({ task }: { task: Task }) {
       {conflicts.map((item, index) => <div key={index}>
         <StatusBadge tone="danger">{describeConflict(item.kind)}</StatusBadge>
         <p>{item.explanation}{item.computation ? <small>{item.computation}</small> : null}</p>
-        <b>{item.assertions.map(number => String(number + 1).padStart(2, '0')).join(' + ')}</b>
+        <b>{item.assertions.map(number => String(number).padStart(2, '0')).join(' + ')}</b>
       </div>)}
     </div>}
     <div className="claim-list assertion-list">{assertions.map((item, index) => <div key={index} className={flagged.has(index) ? 'flagged' : undefined}>
@@ -268,6 +274,40 @@ function VerificationFlow({ task, sellers, onInspect }: { task: Task; sellers: S
   </div>;
 }
 
+// An audit's evidence is the document, so inspecting an agent's work shows the assertion it was
+// given, whether the document contradicts itself there, and only then what the agent concluded.
+export function DocumentAnalysisPanel({ task, delivery, verification }: { task: Task; delivery: Delivery; verification?: Delivery['verification'] }) {
+  const assertions = task.audit?.assertions ?? [];
+  const conflicts = task.audit?.conflicts ?? [];
+  const subClaim = task.sub_claims.find(item => item.sub_claim_id === delivery.sub_claim_id);
+  const index = subClaim ? assertions.findIndex(item => item.text === subClaim.text) : -1;
+  const assertion = index >= 0 ? assertions[index] : undefined;
+  const involved = index >= 0 ? conflicts.filter(item => item.assertions.includes(index + 1)) : [];
+  const checkable = assertions.filter(item => item.kind === 'VERIFIABLE').length;
+  return <Card className="atomic-panel">
+    <SectionHeader icon="◫" title="Document analysis" subtitle="What the document says here, and whether it says it consistently"
+      aside={<span className="muted-label">{index >= 0 ? `Assertion ${index + 1} of ${assertions.length}` : 'Assertion'}</span>}/>
+    <div className="analysis-body">
+      <label className="field-label">Assertion under review</label>
+      <blockquote>{subClaim?.text ?? task.claim}</blockquote>
+      {assertion && <p className="analysis-note"><b>{assertion.kind === 'VERIFIABLE' ? 'Researchable' : KIND_LABEL[assertion.kind] ?? assertion.kind}</b> — {assertion.reason}</p>}
+
+      <h3>Internal consistency {involved.length ? <span>{involved.length}</span> : null}</h3>
+      {involved.length ? <div className="conflict-list">{involved.map((item, key) => <div key={key}>
+        <StatusBadge tone="danger">{describeConflict(item.kind)}</StatusBadge>
+        <p>{item.explanation}{item.computation ? <small>{item.computation}</small> : null}</p>
+        <b>{item.assertions.map(number => String(number).padStart(2, '0')).join(' + ')}</b>
+      </div>)}</div> : <div className="reason-box success">Nothing else in this document contradicts this assertion.</div>}
+
+      <h3>Independent verdict</h3>
+      {verification?.failed_criteria.length
+        ? <div className="reason-box danger">{[...new Set(verification.failed_criteria.map(describeCriterion))].join(' \u00b7 ')}</div>
+        : <div className="reason-box success">{verification?.resolver_verdict.reasoning ?? 'Two independent judges have not finished reviewing this assertion.'}</div>}
+      <p className="analysis-note">Checked against outside sources by {task.slots.length} independent researcher{task.slots.length === 1 ? '' : 's'}. {checkable} of {assertions.length} assertions in this document were researchable at all.</p>
+    </div>
+  </Card>;
+}
+
 export function EvidencePage({ task, activeDeliveryId, onDelivery, onNavigate }: { task?: Task; activeDeliveryId?: string; onDelivery: (id: string) => void; onNavigate: Navigate }) {
   const [rawOpen, setRawOpen] = useState(false);
   const delivery = task?.deliveries.find(item => item.submission_id === activeDeliveryId) ?? task?.deliveries[0];
@@ -279,10 +319,10 @@ export function EvidencePage({ task, activeDeliveryId, onDelivery, onNavigate }:
   if (!task || !delivery) return <><MountainHero eyebrow="EVIDENCE INSPECTOR" title="Inspect the" accent="evidence." subtitle="See exactly why a submission passed or failed. Grounded evidence. Independent judging. Verifiable outcomes."/><Card><EmptyState title="No evidence to inspect" description="Open a seller submission from a verification run." action={<button className="button primary-button" type="button" onClick={() => onNavigate('desk')}>Go to Verification Desk</button>}/></Card></>;
   return <>
     <MountainHero eyebrow="EVIDENCE INSPECTOR" title="Inspect the" accent="evidence." subtitle="See exactly why a submission passed or failed. Grounded evidence. Independent judging. Verifiable outcomes."><ProtocolPillars/></MountainHero>
-    <Card className="claim-summary"><span className="summary-index">01</span><div><small>Seller claim</small><h2>{task.claim}</h2><p><label className="submission-picker">Submission <select value={delivery.submission_id} onChange={event => onDelivery(event.target.value)}>{task.deliveries.map(item => <option key={item.submission_id} value={item.submission_id}>{sellerName(item.seller_id)}</option>)}</select></label><span>Submitted {formatDate(task.created_at)}</span><CopyableHash value={delivery.submission_id} label="submission ID"/></p></div><div className="claim-verdict"><VerdictBadge verdict={verification ? verification.resolver_verdict.final_pass ? 'verified' : 'refuted' : 'pending'}/><small>{verification?.resolver_verdict.reasoning ?? 'Independent review has not completed.'}</small></div></Card>
+    <Card className="claim-summary"><span className="summary-index">01</span><div><small>{task.audit ? 'Document under audit' : 'Seller claim'}</small><h2>{task.audit ? documentLabel(task.claim) : task.claim}</h2>{task.audit ? <p className="document-size">{task.claim.length.toLocaleString()} characters · {task.audit.assertions.length} assertions extracted</p> : null}<p><label className="submission-picker">Submission <select value={delivery.submission_id} onChange={event => onDelivery(event.target.value)}>{task.deliveries.map(item => <option key={item.submission_id} value={item.submission_id}>{sellerName(item.seller_id)}</option>)}</select></label><span>Submitted {formatDate(task.created_at)}</span><CopyableHash value={delivery.submission_id} label="submission ID"/></p></div><div className="claim-verdict"><VerdictBadge verdict={verification ? verification.resolver_verdict.final_pass ? 'verified' : 'refuted' : 'pending'}/><small>{verification?.resolver_verdict.reasoning ?? 'Independent review has not completed.'}</small></div></Card>
     <div className="evidence-layout">
       <Card className="submission-panel"><SectionHeader icon="▤" title="Seller submission" subtitle="What the worker provided" aside={<button type="button" className="text-link" onClick={() => setRawOpen(true)}>View raw ↗</button>}/><label className="field-label">Claim statement</label><blockquote>{task.sub_claims.find(item => item.sub_claim_id === delivery.sub_claim_id)?.text ?? task.claim}</blockquote><p>{delivery.content.summary ?? delivery.content.reasoning}</p><dl className="details-list"><dt>Submitter</dt><dd>{seller}</dd><dt>Submitted</dt><dd>{formatDate(task.created_at)}</dd><dt>Execution</dt><dd>{task.request.execution_mode === 'live' ? 'Live web research' : 'Demo replay'}</dd><dt>Submission</dt><dd><CopyableHash value={delivery.submission_id} label="submission ID"/></dd></dl><div className="materials"><h3>Supporting sources <span>{cited.length}</span></h3>{cited.length ? cited.map(entry => <a key={entry.url} href={entry.url} target="_blank" rel="noreferrer"><span>▤</span><p><strong>{entry.title ?? new URL(entry.url).hostname}</strong><small>{shortId(entry.url, 30, 10)}{entry.quotes.length > 1 ? ` · ${entry.quotes.length} passages` : ''}</small></p><b>↗</b></a>) : <EmptyState title="No supporting sources" description="This submission did not include evidence."/>}</div></Card>
-      <Card className="atomic-panel"><SectionHeader icon="◎" title="Atomic claim and evidence" subtitle="This submission's claim is evaluated independently" aside={<span className="muted-label">1 claim</span>}/>{(task.sub_claims.filter(claim => claim.sub_claim_id === delivery.sub_claim_id).length ? task.sub_claims.filter(claim => claim.sub_claim_id === delivery.sub_claim_id) : [{ sub_claim_id: task.task_id, text: task.claim }]).map((claim, index) => <details key={claim.sub_claim_id} open><summary><span>{String(index + 1).padStart(2, '0')}</span><strong>{claim.text}</strong><VerdictBadge verdict={verification ? verification.resolver_verdict.final_pass ? 'accepted' : 'not accepted' : 'pending'}/><i>⌄</i></summary><div className="atomic-body">{verification?.failed_criteria.length ? <div className="reason-box danger">{[...new Set(verification.failed_criteria.map(describeCriterion))].join(' · ')}</div> : <div className="reason-box success">{verification?.resolver_verdict.reasoning ?? 'Review is still pending.'}</div>}<h3>Cited sources ({cited.length})</h3>{cited.map(entry => <article className="evidence-source" key={entry.url}><span>▤</span><div><div><strong>{entry.title ?? new URL(entry.url).hostname}</strong><StatusBadge tone={entry.status === 'supports' ? 'success' : entry.status === 'pending' ? 'neutral' : entry.status === 'unretrievable' ? 'warning' : 'danger'}>{entry.status === 'supports' ? 'Supports' : entry.status === 'missing' ? 'Source not found' : entry.status === 'unretrievable' ? 'Could not retrieve' : entry.status === 'not supported' ? 'Not supported' : 'Pending'}</StatusBadge></div>{entry.quotes.map((item, quoteIndex) => <blockquote key={quoteIndex}>“{item.quote}”</blockquote>)}<small>{entry.publisher ?? new URL(entry.url).hostname}{entry.quotes.length > 1 ? ` · ${entry.quotes.length} passages cited` : ''} · retrieved {formatDate(entry.retrieved_at)} · {entry.content_hash ? `SHA-256 ${shortId(entry.content_hash, 12, 8)}` : 'hash pending'}</small>{entry.quotes.map((item, quoteIndex) => item.entailment ? <p key={quoteIndex}>{item.entailment}</p> : null)}</div><a href={entry.url} target="_blank" rel="noreferrer" aria-label="Open source">↗</a></article>)}</div></details>)}</Card>
+      {task.audit ? <DocumentAnalysisPanel task={task} delivery={delivery} verification={verification}/> : <Card className="atomic-panel"><SectionHeader icon="◎" title="Atomic claim and evidence" subtitle="This submission's claim is evaluated independently" aside={<span className="muted-label">1 claim</span>}/>{(task.sub_claims.filter(claim => claim.sub_claim_id === delivery.sub_claim_id).length ? task.sub_claims.filter(claim => claim.sub_claim_id === delivery.sub_claim_id) : [{ sub_claim_id: task.task_id, text: task.claim }]).map((claim, index) => <details key={claim.sub_claim_id} open><summary><span>{String(index + 1).padStart(2, '0')}</span><strong>{claim.text}</strong><VerdictBadge verdict={verification ? verification.resolver_verdict.final_pass ? 'accepted' : 'not accepted' : 'pending'}/><i>⌄</i></summary><div className="atomic-body">{verification?.failed_criteria.length ? <div className="reason-box danger">{[...new Set(verification.failed_criteria.map(describeCriterion))].join(' · ')}</div> : <div className="reason-box success">{verification?.resolver_verdict.reasoning ?? 'Review is still pending.'}</div>}<h3>Cited sources ({cited.length})</h3>{cited.map(entry => <article className="evidence-source" key={entry.url}><span>▤</span><div><div><strong>{entry.title ?? new URL(entry.url).hostname}</strong><StatusBadge tone={entry.status === 'supports' ? 'success' : entry.status === 'pending' ? 'neutral' : entry.status === 'unretrievable' ? 'warning' : 'danger'}>{entry.status === 'supports' ? 'Supports' : entry.status === 'missing' ? 'Source not found' : entry.status === 'unretrievable' ? 'Could not retrieve' : entry.status === 'not supported' ? 'Not supported' : 'Pending'}</StatusBadge></div>{entry.quotes.map((item, quoteIndex) => <blockquote key={quoteIndex}>“{item.quote}”</blockquote>)}<small>{entry.publisher ?? new URL(entry.url).hostname}{entry.quotes.length > 1 ? ` · ${entry.quotes.length} passages cited` : ''} · retrieved {formatDate(entry.retrieved_at)} · {entry.content_hash ? `SHA-256 ${shortId(entry.content_hash, 12, 8)}` : 'hash pending'}</small>{entry.quotes.map((item, quoteIndex) => item.entailment ? <p key={quoteIndex}>{item.entailment}</p> : null)}</div><a href={entry.url} target="_blank" rel="noreferrer" aria-label="Open source">↗</a></article>)}</div></details>)}</Card>}
       <Card className="judge-panel"><SectionHeader icon="◎" title="Judge opinions" subtitle="Independent evaluation from two agents"/>{verification ? <>{([['A', verification.judge_a], ['B', verification.judge_b]] as const).map(([name, judge]) => <article className="judge-card" key={name}><div><span className="agent-mark">{name === 'A' ? '◆' : '●'}</span><p><strong>Judge {name}</strong><small>{name === 'A' ? 'Factual accuracy' : 'Evidence audit'}</small></p><VerdictBadge verdict={judge.pass ? 'verified' : 'refuted'}/></div><blockquote>“{judge.reasoning}”</blockquote><footer><StatusBadge tone="success">Grounded</StatusBadge><span>{sources.length} citations</span><span>{Math.round(judge.score * 100)}% confidence</span></footer></article>)}<article className="reconciliation-card"><div><span>≋</span><p><strong>Reconciliation</strong><small>Evidence + judge policy</small></p><VerdictBadge verdict={verification.resolver_verdict.final_pass ? 'verified' : 'refuted'}/></div><p>{verification.resolver_verdict.reasoning}</p></article></> : <EmptyState title="Judges are evaluating" description="Independent opinions will appear together when the review batch completes."/>}</Card>
     </div>
     <Card className="outcome-bar"><SectionHeader icon="▤" title="Settlement outcome" subtitle={verification?.resolver_verdict.final_pass ? 'Payment eligible for release.' : verification ? 'Payment blocked by failed verification.' : 'Settlement waits for verification.'}/><div><VerdictBadge verdict={task.slots.find(slot => slot.seller_id === delivery.seller_id)?.state ?? 'pending'}/><MoneyDisplay amount={task.payment_amount_sol} asset="SOL"/></div><SolanaLink href={task.slots.find(slot => slot.seller_id === delivery.seller_id)?.receipt?.explorer_url}/></Card>

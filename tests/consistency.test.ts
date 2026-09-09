@@ -5,7 +5,7 @@ import type { ConsistencyConflict, ExtractedAssertion } from '../src/core/models
 
 const assertions: ExtractedAssertion[] = ['a', 'b', 'c'].map(text => ({ text: `${text} assertion text`, kind: 'VERIFIABLE' as const, reason: 'measurable' }));
 const conflict = (over: Partial<ConsistencyConflict> = {}): ConsistencyConflict => ({
-  assertions: [0, 1], kind: 'numeric_mismatch', explanation: 'The stated percentage does not follow.',
+  assertions: [1, 2], kind: 'numeric_mismatch', explanation: 'The stated percentage does not follow.',
   stated_value: 42, computed_value: 39, computation: '100000 to 61000 is a 39% decrease', ...over,
 });
 
@@ -21,7 +21,7 @@ describe('internal consistency findings', () => {
   });
 
   it('drops a reference to an assertion the document never made', () => {
-    expect(verifiedConflicts([conflict({ assertions: [0, 9] })], assertions)).toEqual([]);
+    expect(verifiedConflicts([conflict({ assertions: [1, 9] })], assertions)).toEqual([]);
     expect(verifiedConflicts([conflict({ assertions: [] })], assertions)).toEqual([]);
   });
 
@@ -31,7 +31,7 @@ describe('internal consistency findings', () => {
   });
 
   it('reports one finding per pair rather than repeating it', () => {
-    expect(verifiedConflicts([conflict(), conflict({ assertions: [1, 0] })], assertions)).toHaveLength(1);
+    expect(verifiedConflicts([conflict(), conflict({ assertions: [2, 1] })], assertions)).toHaveLength(1);
   });
 
   it('scales the tolerance with the size of the figures', () => {

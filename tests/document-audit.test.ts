@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createTask, Engine } from '../src/core/engine';
 import { COMPLEX_CLAIM } from '../src/data/corpus';
-import type { ExtractedAssertion } from '../src/core/models';
+import type { ExtractedAssertion, Task } from '../src/core/models';
 
 const LIVE_ENV = { OPENAI_API_KEY: 'configured', ELASTICSEARCH_URL: 'https://index.example' };
 
@@ -84,11 +84,13 @@ describe('document audit', () => {
     vi.spyOn(engine.models, 'extractAssertions').mockResolvedValue(extraction([
       { text: 'A checkable assertion about emissions.', kind: 'VERIFIABLE', reason: 'measurable' },
     ]));
-    while (task.phase !== 'sellers') await engine.step();
+    // A literal comparison after the first loop narrows task.phase, so step through a parameter.
+    const stepUntil = async (phase: Task['phase']) => { while (task.phase !== phase) await engine.step(); };
+    await stepUntil('sellers');
     expect(task.sub_claims[0].reconciled_verdict).toBe('insufficient_evidence');
     expect(task.sub_claims[0].verdicts).toEqual([]);
 
-    while (task.phase !== 'complete') await engine.step();
+    await stepUntil('complete');
     expect(task.sub_claims[0].verdicts.length).toBeGreaterThan(0);
   });
 

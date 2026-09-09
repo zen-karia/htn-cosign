@@ -12,12 +12,12 @@ export function meaningfulDifference(stated: number, computed: number): boolean 
   return Math.abs(stated - computed) > Math.max(0.05, NUMERIC_TOLERANCE * scale);
 }
 
-// An index outside the assertion list is a reference to something the document never said.
+// A number outside the assertion list is a reference to something the document never said.
 export function verifiedConflicts(conflicts: ConsistencyConflict[], assertions: ExtractedAssertion[]): ConsistencyConflict[] {
   const seen = new Set<string>();
   return conflicts.filter(conflict => {
     if (!conflict.assertions.length) return false;
-    if (conflict.assertions.some(index => !Number.isInteger(index) || index < 0 || index >= assertions.length)) return false;
+    if (conflict.assertions.some(number => !Number.isInteger(number) || number < 1 || number > assertions.length)) return false;
     if (conflict.kind === 'numeric_mismatch' && !meaningfulDifference(conflict.stated_value, conflict.computed_value)) return false;
     const key = `${conflict.kind}\u0000${[...conflict.assertions].sort((a, b) => a - b).join(',')}`;
     return seen.has(key) ? false : (seen.add(key), true);
