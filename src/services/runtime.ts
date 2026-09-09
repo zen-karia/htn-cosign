@@ -1,6 +1,8 @@
 import { mockEnabled, type ServiceEvidence, type Settings } from '../core/models';
 export type EvidenceSink = (e: ServiceEvidence) => void;
 export class ServiceUnavailable extends Error { constructor(public service: string, message: string) { super(`${service}: ${message}`); } }
+// Transient by nature: the same request a moment later is expected to succeed.
+const RETRYABLE = new Set([408, 425, 429, 500, 502, 503, 504]);
 export class Runtime {
   constructor(public env: Settings, public evidence: EvidenceSink = () => {}) {}
   mocked(service: string) { return mockEnabled(this.env, service); }
@@ -21,9 +23,21 @@ export class Runtime {
     }
   }
   require(key: string) { const value = this.env[key]; if (!value) throw new ServiceUnavailable(key, 'Missing configuration; live mode does not silently fall back'); return value; }
-  async json<T>(url: string, init: RequestInit, timeout = 45_000): Promise<T> {
-    const response = await fetch(url, { ...init, signal: AbortSignal.timeout(timeout) });
-    if (!response.ok) throw new ServiceUnavailable('http', `HTTP ${response.status}`);
-    return response.json() as Promise<T>;
+  // A 429 is an instruction to wait, not a verdict. Retrying it immediately, which is what
+  // happened before, turns one rate limit into three and stalls a run that would have gone
+  // through a second later. Only Elastic, GPTZero and OpenAI reach this: Solana settles through
+  // web3.js, so nothing here can resubmit a transaction.
+  async json<T>(url: string, init: RequestInit, timeout = 45_000, attempts = 3): Promise<T> {
+    const base = Number(this.env.HTTP_RETRY_BASE_MS ?? 1200);
+    for (let attempt = 1; ; attempt++) {
+      const response = await fetch(url, { ...init, signal: AbortSignal.timeout(timeout) });
+      if (response.ok) return response.json() as Promise<T>;
+      if (attempt >= attempts || !RETRYABLE.has(response.status)) throw new ServiceUnavailable('http', `HTTP ${response.status}`);
+      // Honour the server's own figure when it gives one, and jitter otherwise so that several
+      // calls rate limited together do not all come back at the same moment.
+      const after = Number(response.headers.get('retry-after'));
+      const wait = Number.isFinite(after) && after > 0 ? Math.min(after * 1000, 10_000) : base * 2 ** (attempt - 1) + Math.random() * 400;
+      await new Promise(resolve => setTimeout(resolve, wait));
+    }
   }
 }
