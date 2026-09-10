@@ -158,40 +158,6 @@ export function DropZone({ onLoad, busy, onBusy, onError, docName, charCount }: 
 
 const KIND_LABEL: Record<string, string> = { SUBJECTIVE: 'Opinion', FUTURE_PREDICTION: 'Forecast', INSUFFICIENTLY_SPECIFIED: 'Too vague' };
 
-// What a document asserts without being checkable is the audit's finding, so the
-// unresearched assertions are listed beside the researched ones rather than hidden.
-export function AuditPanel({ task }: { task: Task }) {
-  const assertions = task.audit?.assertions ?? [];
-  const conflicts = task.audit?.conflicts ?? [];
-  const checkable = assertions.filter(item => item.kind === 'VERIFIABLE').length;
-  const flagged = new Set(conflicts.flatMap(item => item.assertions).map(number => number - 1));
-  // reconciled_verdict is seeded to insufficient_evidence when the sub-claim is created, so
-  // before reconcile has run it is a placeholder, not a finding. verdicts is empty until then.
-  const verdictFor = (text: string) => {
-    const claim = task.sub_claims.find(item => item.text === text);
-    if (!claim || !claim.verdicts.length) return undefined;
-    return claim.resolution?.verdict ?? claim.reconciled_verdict;
-  };
-  return <Card>
-    <SectionHeader icon="◫" title="Document assertions" subtitle={`${checkable} of ${assertions.length} researchable; the rest are reported, not checked`} aside={conflicts.length ? <StatusBadge tone="danger">{conflicts.length} internal conflict{conflicts.length === 1 ? '' : 's'}</StatusBadge> : undefined}/>
-    {conflicts.length > 0 && <div className="conflict-list">
-      <p className="conflict-intro">Found by reading the document against itself, before any research. No external source can settle these.</p>
-      {conflicts.map((item, index) => <div key={index}>
-        <StatusBadge tone="danger">{describeConflict(item.kind)}</StatusBadge>
-        <p>{item.explanation}{item.computation ? <small>{item.computation}</small> : null}</p>
-        <b>{item.assertions.map(number => String(number).padStart(2, '0')).join(' + ')}</b>
-      </div>)}
-    </div>}
-    <div className="claim-list assertion-list">{assertions.map((item, index) => <div key={index} className={flagged.has(index) ? 'flagged' : undefined}>
-      <span>{String(index + 1).padStart(2, '0')}</span>
-      <p>{item.text}<small>{item.reason}</small></p>
-      {item.kind === 'VERIFIABLE'
-        ? <VerdictBadge verdict={verdictFor(item.text)}/>
-        : <StatusBadge tone="neutral">{KIND_LABEL[item.kind] ?? item.kind}</StatusBadge>}
-    </div>)}</div>
-  </Card>;
-}
-
 export function DeskPage({ config, task, posting, claim, decompose, auditMode, reading, fileError, docName, onLoadDocument, onClaim, onDecompose, onAuditMode, onReading, onFileError, onStart, onNavigate, onInspect, replaying }: {
   config?: Config; task?: Task; posting: boolean; claim: string; decompose: boolean; auditMode: boolean; reading: boolean; fileError: string; docName: string;
   onClaim: (value: string) => void; onDecompose: (value: boolean) => void; onAuditMode: (value: boolean) => void;
@@ -260,8 +226,7 @@ export function LiveRunPage({ task, onNavigate, onInspect }: { task?: Task; onNa
     <Card className="pipeline-card"><StepProgress task={task}/></Card>
     {!task ? <Card><EmptyState title="No active verification" description="Start a run from the Verification Desk or load a recorded replay." action={<button type="button" className="button primary-button" onClick={() => onNavigate('desk')}>Go to Verification Desk</button>}/></Card> : <div className="live-layout">
       <div className="live-main">
-        <Card><SectionHeader icon="▤" title="Run overview" aside={<CopyableHash value={task.task_id} label="run ID"/>}/><p className="run-claim">{task.claim}</p><div className="meta-chips"><span>{task.acceptance_criteria.min_citations} citations</span><span>✓ Grounded sources</span><span>✓ Hallucination check</span><span>{task.deliveries.length} seller submissions</span></div><dl className="overview-meta"><dt>Started</dt><dd>{formatDate(task.created_at)}</dd><dt>Execution</dt><dd>{task.request.execution_mode === 'live' ? 'Live agents' : 'Demo replay'}</dd><dt>Settlement</dt><dd>{task.service_modes.solana ? 'Simulated · no chain transaction' : 'Solana devnet · one transaction per slot'}</dd></dl></Card>
-        {task.audit && <AuditPanel task={task}/>}
+        <Card><SectionHeader icon="▤" title="Run overview" aside={<CopyableHash value={task.task_id} label="run ID"/>}/>{task.audit ? <details className="run-document"><summary><strong>{documentLabel(task.claim)}</strong><small>{task.claim.length.toLocaleString()} characters · {task.audit.assertions.length} assertions · show full text</small></summary><p>{task.claim}</p></details> : <p className="run-claim">{task.claim}</p>}<div className="meta-chips"><span>{task.acceptance_criteria.min_citations} citations</span><span>✓ Grounded sources</span><span>✓ Hallucination check</span><span>{task.deliveries.length} seller submissions</span></div><dl className="overview-meta"><dt>Started</dt><dd>{formatDate(task.created_at)}</dd><dt>Execution</dt><dd>{task.request.execution_mode === 'live' ? 'Live agents' : 'Demo replay'}</dd><dt>Settlement</dt><dd>{task.service_modes.solana ? 'Simulated · no chain transaction' : 'Solana devnet · one transaction per slot'}</dd></dl></Card>
         <Card className="flow-card"><SectionHeader icon="⌁" title="Verification flow" subtitle="Every submission is evaluated independently by two judges" aside={<SegmentedTabs label="Flow view" value={mode} onChange={setMode} items={[{ value: 'graph', label: 'Graph view' }, { value: 'list', label: 'List view' }]}/>}/>
           {mode === 'graph' ? <VerificationFlow task={task} sellers={sellers} onInspect={onInspect}/> : <div className="flow-list">{sellers.map(seller => <SellerCard key={seller.id} seller={seller} assertions={sellerAssertions(task, seller.id)} onInspect={() => onInspect(seller.deliveries[0]?.submission_id)}/>)}</div>}
         </Card>
