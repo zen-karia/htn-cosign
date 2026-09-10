@@ -33,6 +33,8 @@ import {
   receiptPayload,
   sellerName,
   sellerViewModels,
+  sellerAssertions,
+  type SellerAssertion,
   shortId,
   citedSources,
   type SellerViewModel,
@@ -66,12 +68,20 @@ function ModeNotice({ task, config, onIntegrations }: { task?: Task; config?: Co
   return <div className="mode-notice"><StatusBadge tone={replay ? 'warning' : missing.length ? 'warning' : 'success'}>{replay ? 'Replay' : 'Live agents'}</StatusBadge><p>{missing.length ? `${missing.join(', ')} not configured.` : 'OpenAI research and Elastic evidence are configured.'} {config?.settlement === 'DEVNET' ? 'Settlement is live on Solana devnet.' : 'Settlement is simulated.'}</p><button type="button" onClick={onIntegrations}>Environment ↗</button></div>;
 }
 
-function SellerCard({ seller, onInspect }: { seller: SellerViewModel; onInspect?: () => void }) {
+function SellerCard({ seller, onInspect, assertions = [] }: { seller: SellerViewModel; onInspect?: () => void; assertions?: SellerAssertion[] }) {
   return <article className={`seller-card ${seller.tone}`}>
     <div className="seller-card-top"><span className="agent-mark" aria-hidden="true">{seller.mark}</span><StatusBadge tone={seller.tone}>{seller.paymentLabel}</StatusBadge></div>
     <button type="button" className="seller-title" disabled={!seller.deliveries.length || !onInspect} onClick={onInspect}>
       <strong>{seller.name}</strong><small>{seller.submissionCount ? `${seller.submissionCount} submission${seller.submissionCount > 1 ? 's' : ''}` : 'Awaiting submission'}</small>
     </button>
+    {assertions.length > 0 && <ul className="seller-assertions">
+      {assertions.map(item => <li key={item.number} className={item.divergent ? 'divergent' : undefined} title={item.text}>
+        <span>{String(item.number).padStart(2, '0')}</span>
+        <b>{item.text}</b>
+        <VerdictBadge verdict={item.passed === false ? 'not accepted' : item.verdict}/>
+      </li>)}
+      {assertions.some(item => item.divergent) && <li className="divergent-note">Highlighted rows are assertions the agents did not agree on.</li>}
+    </ul>}
     <div className="seller-gates">
       <GateRow label="Source grounding" state={seller.groundingPassed}/>
       <GateRow label="Hallucination gate" state={seller.hallucinationPassed}/>
@@ -223,7 +233,7 @@ export function DeskPage({ config, task, posting, claim, decompose, auditMode, r
     <Card className="pipeline-card"><SectionHeader icon="⌁" title="Protocol pipeline" subtitle="Workers produce. Judges verify. Cosign reconciles. Solana settles." aside={task && <button type="button" className="text-link" onClick={() => onNavigate('live')}>Open live run ↗</button>}/><StepProgress task={task}/></Card>
     <Card className="results-card">
       <div className="results-toolbar"><SegmentedTabs label="Run results" value={tab} onChange={setTab} items={[{ value: 'sellers', label: 'Seller pool', count: sellers.length }, { value: 'verdicts', label: 'Verdicts', count: task?.deliveries.filter(d => d.verification).length ?? 0 }, { value: 'disputes', label: 'Disputes', count: disputes.length }, { value: 'integrations', label: 'Integrations' }]}/>{task && <CopyableHash value={task.task_id} label="run ID"/>}</div>
-      {tab === 'sellers' && (sellers.length ? <div className="seller-grid">{sellers.map(seller => <SellerCard key={seller.id} seller={seller} onInspect={() => onInspect(seller.deliveries[0]?.submission_id)}/>)}</div> : <EmptyState title="Ready for the first run" description="Set a claim and verification policy, then start verification."/>)}
+      {tab === 'sellers' && (sellers.length ? <div className="seller-grid">{sellers.map(seller => <SellerCard key={seller.id} seller={seller} assertions={sellerAssertions(task, seller.id)} onInspect={() => onInspect(seller.deliveries[0]?.submission_id)}/>)}</div> : <EmptyState title="Ready for the first run" description="Set a claim and verification policy, then start verification."/>)}
       {tab === 'verdicts' && (task?.deliveries.some(d => d.verification) ? <div className="table-wrap"><table><thead><tr><th>Seller</th><th>Submitted verdict</th><th>Judge A</th><th>Judge B</th><th>Final</th><th/></tr></thead><tbody>{task.deliveries.map(delivery => <tr key={delivery.submission_id}><td>{sellerName(delivery.seller_id)}</td><td><VerdictBadge verdict={delivery.content.verdict}/></td><td>{delivery.verification ? delivery.verification.judge_a.pass ? 'Pass' : 'Fail' : 'Pending'}</td><td>{delivery.verification ? delivery.verification.judge_b.pass ? 'Pass' : 'Fail' : 'Pending'}</td><td><VerdictBadge verdict={delivery.verification ? delivery.verification.resolver_verdict.final_pass ? 'verified' : 'refuted' : 'pending'}/></td><td><button className="text-link" type="button" onClick={() => onInspect(delivery.submission_id)}>Inspect ↗</button></td></tr>)}</tbody></table></div> : <EmptyState title="No verdicts yet" description="Independent judge results appear after submissions pass the evidence gates."/>)}
       {tab === 'disputes' && (disputes.length ? <div className="dispute-grid">{disputes.map(delivery => <article key={delivery.submission_id}><VerdictBadge verdict="payment blocked"/><h3>{sellerName(delivery.seller_id)}</h3><p>{delivery.dispute?.delta}</p><button type="button" className="text-link" onClick={() => onInspect(delivery.submission_id)}>Inspect evidence ↗</button></article>)}</div> : <EmptyState title="No active disputes" description="Failed criteria and refund evidence will appear here."/>)}
       {tab === 'integrations' && <IntegrationsPanel config={config} task={task}/>} 
@@ -253,7 +263,7 @@ export function LiveRunPage({ task, onNavigate, onInspect }: { task?: Task; onNa
         <Card><SectionHeader icon="▤" title="Run overview" aside={<CopyableHash value={task.task_id} label="run ID"/>}/><p className="run-claim">{task.claim}</p><div className="meta-chips"><span>{task.acceptance_criteria.min_citations} citations</span><span>✓ Grounded sources</span><span>✓ Hallucination check</span><span>{task.deliveries.length} seller submissions</span></div><dl className="overview-meta"><dt>Started</dt><dd>{formatDate(task.created_at)}</dd><dt>Execution</dt><dd>{task.request.execution_mode === 'live' ? 'Live agents' : 'Demo replay'}</dd><dt>Settlement</dt><dd>{task.service_modes.solana ? 'Simulated · no chain transaction' : 'Solana devnet · one transaction per slot'}</dd></dl></Card>
         {task.audit && <AuditPanel task={task}/>}
         <Card className="flow-card"><SectionHeader icon="⌁" title="Verification flow" subtitle="Every submission is evaluated independently by two judges" aside={<SegmentedTabs label="Flow view" value={mode} onChange={setMode} items={[{ value: 'graph', label: 'Graph view' }, { value: 'list', label: 'List view' }]}/>}/>
-          {mode === 'graph' ? <VerificationFlow task={task} sellers={sellers} onInspect={onInspect}/> : <div className="flow-list">{sellers.map(seller => <SellerCard key={seller.id} seller={seller} onInspect={() => onInspect(seller.deliveries[0]?.submission_id)}/>)}</div>}
+          {mode === 'graph' ? <VerificationFlow task={task} sellers={sellers} onInspect={onInspect}/> : <div className="flow-list">{sellers.map(seller => <SellerCard key={seller.id} seller={seller} assertions={sellerAssertions(task, seller.id)} onInspect={() => onInspect(seller.deliveries[0]?.submission_id)}/>)}</div>}
         </Card>
       </div>
       <aside className="live-aside"><Card className="sticky-card"><SectionHeader icon="▤" title="Settlement summary" aside={<VerdictBadge verdict={task.phase === 'complete' ? 'settled' : task.status}/>}/><MoneyDisplay amount={settlement.total} asset="SOL" label="in escrow" large/><div className="settlement-bar"><i style={{ width: `${settlement.total ? settlement.released / settlement.total * 100 : 0}%` }}/><b style={{ width: `${settlement.total ? settlement.returned / settlement.total * 100 : 0}%` }}/></div><div className="aside-stat"><span><i className="legend-dot success"/>Releasable</span><strong>{formatSol(settlement.released)} SOL</strong></div><div className="aside-stat"><span><i className="legend-dot primary"/>Protected & returnable</span><strong>{formatSol(settlement.protected)} SOL</strong></div><div className="aside-stat"><span><i className="legend-dot danger"/>Returned</span><strong>{formatSol(settlement.returned)} SOL</strong></div><div className="trust-note"><span>▣</span><p><strong>Payment stays protected</strong><small>Release requires independently verified work.</small></p></div></Card><Card><SectionHeader icon="◌" title="Live activity" aside={<span className="muted-label">{task.activity.length} events</span>}/><ActivityFeed events={task.activity} limit={10}/></Card></aside>

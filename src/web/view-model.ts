@@ -73,6 +73,27 @@ export function sellerName(id: string) {
   return id.replace(/^research-agent-/, 'Research Agent ').replace(/^agent-/, 'Agent ').replace(/\b\w/g, char => char.toUpperCase());
 }
 
+export interface SellerAssertion { number: number; text: string; verdict?: string; passed?: boolean; divergent: boolean; }
+
+// What one agent concluded, assertion by assertion. "3 submissions" says nothing about which
+// parts of the document an agent got right, and divergence between agents on the same assertion
+// is the most informative thing on the page while being invisible everywhere else.
+export function sellerAssertions(task: Task | undefined, sellerId: string): SellerAssertion[] {
+  if (!task) return [];
+  return task.deliveries.filter(delivery => delivery.seller_id === sellerId).map(delivery => {
+    const index = task.sub_claims.findIndex(item => item.sub_claim_id === delivery.sub_claim_id);
+    const claim = task.sub_claims[index];
+    const peers = task.deliveries.filter(item => item.sub_claim_id === delivery.sub_claim_id);
+    return {
+      number: index + 1,
+      text: claim?.text ?? delivery.content.verdict,
+      verdict: delivery.content.verdict,
+      passed: delivery.verification ? delivery.verification.resolver_verdict.final_pass : undefined,
+      divergent: new Set(peers.map(item => item.content.verdict)).size > 1,
+    };
+  }).sort((a, b) => a.number - b.number);
+}
+
 export function sellerViewModels(task?: Task): SellerViewModel[] {
   if (!task) return [];
   return task.slots.map((slot, index) => {

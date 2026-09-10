@@ -555,3 +555,11 @@ th { color: var(--text-tertiary); font-size: 8px; text-transform: uppercase; }
 .analysis-note b { color: var(--text-secondary); }
 
 .claim-summary .document-size { margin: 4px 0 0; color: var(--text-tertiary); font-size: 9px; }
+
+.seller-assertions { display: grid; gap: 2px; margin: 8px 0 0; padding: 8px 0 0; list-style: none; border-top: 1px solid var(--border-subtle); }
+.seller-assertions li { display: grid; grid-template-columns: 20px minmax(0, 1fr) max-content; align-items: center; gap: 7px; padding: 3px 0; }
+.seller-assertions li>span { color: var(--primary); font: 8.5px "SFMono-Regular", Consolas, monospace; }
+.seller-assertions li>b { min-width: 0; overflow: hidden; color: var(--text-secondary); font-size: 8.5px; font-weight: 400; text-overflow: ellipsis; white-space: nowrap; }
+.seller-assertions li.divergent { padding: 3px 5px; margin: 0 -5px; border-radius: 5px; background: var(--surface-amber, #fdf5e2); }
+.seller-assertions li.divergent>span { color: var(--warning, #9a6700); font-weight: 700; }
+.seller-assertions li.divergent-note { display: block; margin-top: 4px; color: var(--text-tertiary); font-size: 8px; line-height: 1.45; }
