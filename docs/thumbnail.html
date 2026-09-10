@@ -1,0 +1,59 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+:root { --primary:#4c55ff; --violet:#8b5cf6; --ink:#0b1335; --muted:#5c678c; --danger:#cf222e; }
+* { box-sizing: border-box; }
+html,body { margin:0; padding:0; }
+body { width:1600px; height:900px; overflow:hidden; position:relative;
+  font-family:-apple-system,"SF Pro Display","Helvetica Neue",Arial,sans-serif;
+  background: radial-gradient(circle at 70% -6%, #e6eeff 0, transparent 62%), #fbfcff; }
+.mountains { position:absolute; right:-3%; bottom:96px; width:56%; height:470px; opacity:.42;
+  filter: drop-shadow(0 18px 26px rgba(70,98,184,.10));
+  -webkit-mask-image: linear-gradient(to bottom, #000 64%, transparent 99%);
+  mask-image: linear-gradient(to bottom, #000 64%, transparent 99%); }
+.mountains i { position:absolute; bottom:0; clip-path: polygon(0 100%, 49% 0, 100% 100%);
+  background: linear-gradient(145deg, rgba(249,252,255,.96) 0 30%, rgba(133,164,237,.9) 31% 48%, rgba(235,241,255,.95) 49% 63%, rgba(117,145,224,.7)); }
+.mountains i:nth-child(1){ left:2%;  width:38%; height:250px; }
+.mountains i:nth-child(2){ left:24%; width:44%; height:440px; }
+.mountains i:nth-child(3){ left:52%; width:34%; height:290px; }
+.mountains i:nth-child(4){ left:72%; width:28%; height:200px; }
+.wrap { position:relative; z-index:2; padding:74px 80px; height:100%; display:flex; flex-direction:column; }
+.brand { display:flex; align-items:center; gap:9px; font-size:46px; font-weight:800; letter-spacing:-2.4px; color:var(--ink); }
+.brand b { color:var(--primary); font-weight:400; font-size:40px; }
+h1 { margin:46px 0 0; font-size:78px; line-height:.99; letter-spacing:-3.4px; color:var(--ink); max-width:1000px; font-weight:800; }
+h1 span { background:linear-gradient(110deg,var(--primary),var(--violet)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.sub { margin:26px 0 0; max-width:860px; font-size:25px; line-height:1.5; color:var(--muted); }
+.steps { margin-top:auto; display:flex; gap:10px; align-items:center; }
+.step { padding:13px 20px; border:1px solid #dbe3f7; border-radius:12px; background:#fff; box-shadow:0 6px 18px rgba(70,98,184,.07);
+  font-size:19px; font-weight:650; color:var(--ink); }
+.step small { display:block; font-size:13.5px; font-weight:400; color:var(--muted); margin-top:2px; }
+.arrow { color:#9fb0dc; font-size:19px; }
+.finding { position:absolute; right:78px; top:250px; z-index:3; width:420px; padding:22px 24px;
+  border:1px solid #f3c9cd; border-radius:16px; background:rgba(253,242,243,.97);
+  box-shadow:0 20px 44px rgba(70,98,184,.16); }
+.finding .tag { display:inline-block; padding:4px 11px; border-radius:20px; background:#fbdfe2;
+  color:var(--danger); font:700 12.5px "SFMono-Regular",Consolas,monospace; letter-spacing:.7px; }
+.finding p { margin:13px 0 0; font-size:16.5px; line-height:1.5; color:#41304a; }
+.finding .math { margin-top:11px; padding-top:11px; border-top:1px solid #f3c9cd;
+  font:13.5px/1.55 "SFMono-Regular",Consolas,monospace; color:#7c5560; }
+.finding .math b { color:var(--danger); }
+</style></head><body>
+<div class="mountains"><i></i><i></i><i></i><i></i></div>
+<div class="wrap">
+  <div class="brand">cosign<b>&#10033;</b></div>
+  <h1>Find where a document<br><span>contradicts itself.</span></h1>
+  <p class="sub">Then verify what survives against the open web &mdash; with independent agents whose every citation is retrieved and checked. Payment settles on-chain only for work that holds up.</p>
+  <div class="steps">
+    <div class="step">Extract<small>every assertion, sorted by what is checkable</small></div>
+    <div class="arrow">&rarr;</div>
+    <div class="step">Reconcile<small>read the document against itself</small></div>
+    <div class="arrow">&rarr;</div>
+    <div class="step">Verify<small>independent agents, retrieved sources</small></div>
+    <div class="arrow">&rarr;</div>
+    <div class="step">Settle<small>Solana devnet, evidence hash in the memo</small></div>
+  </div>
+</div>
+<div class="finding">
+  <span class="tag">FIGURES DISAGREE</span>
+  <p>The report claims a <b>1,200%</b> cost overrun. Its own figures give 900.</p>
+  <div class="math">($10.0B &minus; $1.0B) / $1.0B = <b>900%</b><br>found before any research ran</div>
+</div>
+</body></html>
